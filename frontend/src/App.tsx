@@ -39,7 +39,7 @@ export default function App() {
   const [isLoading, setIsLoading] = useState(true);
   const [isCompleting, setIsCompleting] = useState(false);
   const [isValidating, setIsValidating] = useState(false);
-  const [playlistMode, setPlaylistMode] = useState<"all" | "multi">("all");
+  const [playlistMode, setPlaylistMode] = useState<"all" | "multi">("multi");
   const [selectedSlugs, setSelectedSlugs] = useState<string[]>([]);
 
   useEffect(() => {

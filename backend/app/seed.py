@@ -147,15 +147,15 @@ TEST_HINTS = {
 
 
 STARTER_CODE = {
-    "python": "# Write your solution here\n",
-    "javascript": "// Write your solution here\n",
-    "typescript": "// Write your solution here\n",
-    "java": "// Write your solution here\n",
-    "cpp": "// Write your solution here\n",
-    "csharp": "// Write your solution here\n",
-    "go": "// Write your solution here\n",
-    "rust": "// Write your solution here\n",
-    "sql": "-- Write your solution here\n",
+    "python": "",
+    "javascript": "",
+    "typescript": "",
+    "java": "",
+    "cpp": "",
+    "csharp": "",
+    "go": "",
+    "rust": "",
+    "sql": "",
 }
 
 

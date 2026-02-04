@@ -60,6 +60,7 @@ export default function EditorPanel({
               className="mt-2 h-56 w-full rounded-2xl border border-white/10 bg-ink/80 p-4 font-mono text-sm text-white/90 outline-none transition focus:border-ember/50"
               value={code}
               onChange={(event) => onCodeChange(event.target.value)}
+              style={{ resize: "none" }}
               onKeyDown={(event) => {
                 if ((event.ctrlKey || event.metaKey) && event.key === "Enter") {
                   event.preventDefault();
