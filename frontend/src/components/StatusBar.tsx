@@ -13,10 +13,10 @@ export default function StatusBar({ progress, activeLanguage }: Props) {
   return (
     <div className="flex flex-wrap items-center justify-between gap-6">
       <div>
-        <p className="text-xs uppercase tracking-[0.4em] text-white/50">SyntaxQuest</p>
-        <h1 className="mt-2 font-display text-3xl text-white">Syntax Lab</h1>
+        <p className="text-xs uppercase tracking-[0.4em] text-white/50">Recode</p>
+        <h1 className="mt-2 font-display text-3xl text-white">Developer Syntax Studio</h1>
         <p className="mt-2 max-w-xl text-sm text-white/60">
-          Practice fundamentals with instant syntax feedback and track your streaks.
+          Practice core syntax with explicit examples, instant feedback, and structured playlists.
         </p>
       </div>
       <div className="flex flex-wrap gap-4 text-sm text-white/70">

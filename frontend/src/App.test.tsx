@@ -55,6 +55,7 @@ vi.mock("./lib/api", () => {
               title: "Hello World Challenge",
               prompt: "Print a greeting message.",
               starter_code: "print('hello')",
+              solution_code: "print('hello')",
               tests: "Verify output and syntax.",
               xp: 40
             }
@@ -70,7 +71,7 @@ vi.mock("./lib/api", () => {
 describe("App", () => {
   it("renders editor layout", async () => {
     render(<App />);
-    expect(screen.getByText(/Syntax Lab/i)).toBeInTheDocument();
+    expect(screen.getByText(/Developer Syntax Studio/i)).toBeInTheDocument();
     await waitFor(() => {
       expect(screen.getByText(/Playlist/i)).toBeInTheDocument();
     });

@@ -1,48 +1,70 @@
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 
 import type { Challenge, ValidationResult } from "../lib/api";
 
 type Props = {
   challenge: Challenge | null;
+  lessonTitle?: string | null;
+  lessonSummary?: string | null;
   code: string;
   onCodeChange: (value: string) => void;
   onValidate: () => void;
   validation: ValidationResult | null;
   isValidating: boolean;
+  successMessage?: string | null;
 };
 
 export default function EditorPanel({
   challenge,
+  lessonTitle,
+  lessonSummary,
   code,
   onCodeChange,
   onValidate,
   validation,
-  isValidating
+  isValidating,
+  successMessage
 }: Props) {
+  const showSuccess = Boolean(validation?.is_valid);
+  const showError = Boolean(validation && !validation.is_valid);
+
   return (
-    <div className="rounded-3xl border border-white/10 bg-white/5 p-6">
+    <div className={`relative overflow-hidden rounded-3xl border border-white/10 bg-white/5 p-6 ${
+      showSuccess ? "border-moss/60 shadow-glow" : ""
+    }`}>
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-xs uppercase tracking-[0.3em] text-white/50">Syntax Lab</p>
+          <p className="text-xs uppercase tracking-[0.3em] text-white/50">Editor</p>
           <h3 className="font-display text-2xl text-white">
-            {challenge ? challenge.title : "Select a lesson"}
+            {lessonTitle ?? "Select a lesson"}
           </h3>
         </div>
-        <div className="rounded-full border border-white/20 px-3 py-1 text-xs text-white/70">Prototype</div>
+        <div className="rounded-full border border-white/20 px-3 py-1 text-xs text-white/70">Recode Studio</div>
       </div>
 
       {challenge ? (
         <div className="mt-4 space-y-4">
-          <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-            <p className="text-sm text-white/80">{challenge.prompt}</p>
-            <p className="mt-2 text-xs uppercase tracking-[0.2em] text-white/40">Tests</p>
-            <p className="mt-1 text-sm text-white/60">{challenge.tests}</p>
+          <div className="grid gap-3 md:grid-cols-[1.1fr_0.9fr]">
+            <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+              <p className="text-xs uppercase tracking-[0.2em] text-white/40">Lesson goal</p>
+              <p className="mt-2 text-sm text-white/80">{lessonSummary}</p>
+              <p className="mt-3 text-xs uppercase tracking-[0.2em] text-white/40">Focus</p>
+              <p className="mt-1 text-sm text-white/70">
+                Keep variable names clear, align types with values, and print the result.
+              </p>
+            </div>
+            <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+              <p className="text-xs uppercase tracking-[0.2em] text-white/40">What to do</p>
+              <p className="mt-2 text-sm text-white/80">{challenge.prompt}</p>
+              <p className="mt-3 text-xs uppercase tracking-[0.2em] text-white/40">Expected</p>
+              <p className="mt-1 text-sm text-white/70">{challenge.tests}</p>
+            </div>
           </div>
 
           <div>
-            <label className="text-xs uppercase tracking-[0.2em] text-white/40">Editor</label>
+            <label className="text-xs uppercase tracking-[0.2em] text-white/40">Code</label>
             <textarea
-              className="mt-2 h-44 w-full rounded-2xl border border-white/10 bg-ink/70 p-4 font-mono text-sm text-white/90 outline-none transition focus:border-ember/50"
+              className="mt-2 h-56 w-full rounded-2xl border border-white/10 bg-ink/80 p-4 font-mono text-sm text-white/90 outline-none transition focus:border-ember/50"
               value={code}
               onChange={(event) => onCodeChange(event.target.value)}
             />
@@ -56,32 +78,63 @@ export default function EditorPanel({
             >
               {isValidating ? "Validating..." : "Validate Syntax"}
             </button>
-            {validation ? (
-              validation.is_valid ? (
-                <motion.span
-                  initial={{ opacity: 0, y: 6 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="text-sm text-moss"
-                >
-                  Syntax looks good. XP is awarded on first pass.
-                </motion.span>
-              ) : (
-                <motion.span
-                  initial={{ opacity: 0, y: 6 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="text-sm text-ember"
-                >
-                  {validation.errors[0] ?? "Syntax needs attention."}
-                </motion.span>
-              )
+            {showSuccess ? (
+              <motion.span
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="text-sm text-moss"
+              >
+                {successMessage ?? "Looks good. Moving to the next activity."}
+              </motion.span>
+            ) : null}
+            {showError ? (
+              <motion.span
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="text-sm text-ember"
+              >
+                {validation?.errors[0] ?? "Syntax needs attention."}
+              </motion.span>
             ) : null}
           </div>
+
+          {showError ? (
+            <div className="rounded-2xl border border-ember/40 bg-ember/10 p-4">
+              <p className="text-xs uppercase tracking-[0.2em] text-white/50">Correct syntax</p>
+              <pre className="mt-2 whitespace-pre-wrap rounded-xl bg-ink/80 p-3 font-mono text-xs text-white/80">
+                {challenge.solution_code}
+              </pre>
+              <p className="mt-2 text-xs text-white/60">
+                Compare this reference with your attempt and try again.
+              </p>
+            </div>
+          ) : null}
         </div>
       ) : (
         <div className="mt-6 rounded-2xl border border-white/10 bg-white/5 p-6 text-sm text-white/60">
           Choose a lesson to open its syntax challenge.
         </div>
       )}
+
+      <AnimatePresence>
+        {showSuccess ? (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            className="pointer-events-none absolute inset-0 rounded-3xl border border-moss/50 bg-moss/10"
+          >
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ duration: 0.5 }}
+              className="absolute right-6 top-6 rounded-full border border-moss/40 bg-moss/20 px-4 py-2 text-xs uppercase tracking-[0.3em] text-moss"
+            >
+              Success
+            </motion.div>
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
     </div>
   );
 }

@@ -47,6 +47,7 @@ export default function Sidebar({
 
       <div>
         <p className="text-xs uppercase tracking-[0.3em] text-white/50">Playlist</p>
+        <p className="mt-2 text-xs text-white/60">Start with fundamentals: hello world, variables, control flow, functions.</p>
         <div className="mt-3 space-y-2">
           {isLoading ? (
             <div className="rounded-2xl border border-white/10 bg-white/5 p-4 text-xs text-white/60">

@@ -21,6 +21,7 @@ export default function App() {
   const [lessonDetail, setLessonDetail] = useState<LessonDetail | null>(null);
   const [code, setCode] = useState("");
   const [validation, setValidation] = useState<ValidationResult | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [progress, setProgress] = useState<Progress | null>(null);
   const [achievements, setAchievements] = useState<Achievement[]>([]);
   const [toasts, setToasts] = useState<Achievement[]>([]);
@@ -79,6 +80,7 @@ export default function App() {
         setLessonDetail(detail);
         setCode(detail.challenges[0]?.starter_code ?? "");
         setValidation(null);
+        setSuccessMessage(null);
       }
     });
     return () => {
@@ -88,6 +90,13 @@ export default function App() {
 
   const topAchievements = useMemo(() => achievements.slice(0, 4), [achievements]);
   const activeChallenge = lessonDetail?.challenges[0] ?? null;
+
+  const findNextLessonId = (lessonId: number) => {
+    const lessons = languageDetail?.lessons ?? [];
+    const index = lessons.findIndex((lesson) => lesson.id === lessonId);
+    if (index < 0) return null;
+    return lessons[index + 1]?.id ?? null;
+  };
 
   const handleCompleteLesson = async (lessonId: number) => {
     setIsCompleting(true);
@@ -110,6 +119,17 @@ export default function App() {
       setValidation(result);
       if (result.is_valid) {
         await handleCompleteLesson(lessonDetail.id);
+        const nextLessonId = findNextLessonId(lessonDetail.id);
+        if (nextLessonId) {
+          setSuccessMessage("Looks good. Moving to the next activity.");
+          window.setTimeout(() => {
+            setSelectedLessonId(nextLessonId);
+          }, 1200);
+        } else {
+          setSuccessMessage("Great work. You finished this playlist.");
+        }
+      } else {
+        setSuccessMessage(null);
       }
     } finally {
       setIsValidating(false);
@@ -148,13 +168,43 @@ export default function App() {
           <motion.div variants={fadeIn} initial="hidden" animate="show">
             <EditorPanel
               challenge={activeChallenge}
+              lessonTitle={lessonDetail?.title}
+              lessonSummary={lessonDetail?.summary}
               code={code}
               onCodeChange={setCode}
               onValidate={handleValidate}
               validation={validation}
               isValidating={isValidating || isCompleting}
+              successMessage={successMessage}
             />
           </motion.div>
+
+          <section className="rounded-3xl border border-white/10 bg-white/5 p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs uppercase tracking-[0.3em] text-white/50">Developer Practices</p>
+                <h3 className="font-display text-2xl text-white">Clean architecture by default</h3>
+              </div>
+            </div>
+            <div className="mt-4 flex flex-wrap gap-2 text-xs text-white/70">
+              {[
+                "SOLID",
+                "Clean Architecture",
+                "DRY",
+                "TDD",
+                "Unit Tests",
+                "Integration Tests",
+                "E2E Tests"
+              ].map((badge) => (
+                <span key={badge} className="rounded-full border border-white/20 px-3 py-1">
+                  {badge}
+                </span>
+              ))}
+            </div>
+            <p className="mt-3 text-sm text-white/60">
+              Recode is built with layered services, strict separation of concerns, and test coverage across the stack.
+            </p>
+          </section>
 
           <section className="rounded-3xl border border-white/10 bg-white/5 p-6">
             <div className="flex items-center justify-between">

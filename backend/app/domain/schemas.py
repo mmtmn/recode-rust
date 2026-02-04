@@ -31,6 +31,7 @@ class ChallengeRead(BaseModel):
     title: str
     prompt: str
     starter_code: str
+    solution_code: str
     tests: str
     xp: int
 

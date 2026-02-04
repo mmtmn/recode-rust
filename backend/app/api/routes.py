@@ -71,6 +71,7 @@ def get_lesson_detail(lesson_id: int, session: Session = Depends(get_session)):
                 title=challenge.title,
                 prompt=challenge.prompt,
                 starter_code=challenge.starter_code,
+                solution_code=challenge.solution_code,
                 tests=challenge.tests,
                 xp=challenge.xp,
             )

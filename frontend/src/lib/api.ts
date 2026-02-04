@@ -21,6 +21,7 @@ export type Challenge = {
   title: string;
   prompt: string;
   starter_code: string;
+  solution_code: string;
   tests: string;
   xp: number;
 };

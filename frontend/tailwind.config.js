@@ -5,7 +5,8 @@ export default {
     extend: {
       fontFamily: {
         display: ["Space Grotesk", "ui-sans-serif", "system-ui"],
-        body: ["Manrope", "ui-sans-serif", "system-ui"]
+        body: ["Manrope", "ui-sans-serif", "system-ui"],
+        mono: ["JetBrains Mono", "ui-monospace", "SFMono-Regular"]
       },
       colors: {
         ink: "#0B0F1A",

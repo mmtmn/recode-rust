@@ -8,11 +8,28 @@
 
 body {
   font-family: "Manrope", sans-serif;
-  background: radial-gradient(circle at top left, rgba(46, 134, 171, 0.35), transparent 45%),
-    radial-gradient(circle at 70% 20%, rgba(255, 107, 53, 0.25), transparent 40%),
+  background: radial-gradient(circle at top left, rgba(46, 134, 171, 0.32), transparent 45%),
+    radial-gradient(circle at 70% 20%, rgba(255, 107, 53, 0.22), transparent 42%),
     radial-gradient(circle at 20% 80%, rgba(42, 157, 143, 0.25), transparent 40%),
     #0b0f1a;
   min-height: 100vh;
+  position: relative;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background-image: linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  background-size: 48px 48px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+#root {
+  position: relative;
+  z-index: 1;
 }
 
 * {

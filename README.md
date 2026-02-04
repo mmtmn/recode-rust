@@ -1,6 +1,6 @@
-# SyntaxQuest
+# Recode
 
-LeetCode-style syntax drills for core languages, built as a gamified learning experience with SQLite, achievements, and animated UI.
+Developer-first syntax drills with instant feedback, playlists, and a focused editor experience. Built to emphasize clean architecture, SOLID, DRY, and test coverage across unit, integration, and E2E layers.
 
 ## Stack
 - Backend: FastAPI + SQLModel + SQLite
@@ -85,4 +85,5 @@ npm run test
 
 ## Notes
 - Data is seeded automatically on backend startup.
-- The design is intentionally cinematic with gradients, motion, and quest-style UI patterns.
+- Syntax validation is lightweight by default (Python compilation + bracket checks); swap in real parsers as needed.
+- To refresh lesson content after seed changes, delete `backend/app.db` and restart the backend.
