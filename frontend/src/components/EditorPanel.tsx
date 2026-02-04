@@ -55,21 +55,21 @@ export default function EditorPanel({
       {challenge ? (
         <div className="mt-4 space-y-4">
           <div>
-            <div className="flex items-center gap-3">
-              <label className="text-xs uppercase tracking-[0.2em] text-white/40">Code</label>
-              <select
-                className="rounded-full border border-white/20 bg-ink/80 px-3 py-1 text-xs text-white/70"
-                value={languageSlug ?? ""}
-                onChange={(event) => onLanguageChange(event.target.value)}
-              >
-                {languages.map((language) => (
-                  <option key={language.slug} value={language.slug}>
-                    {language.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="mt-3">
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <label className="text-xs uppercase tracking-[0.2em] text-white/40">Code</label>
+                <select
+                  className="rounded-full border border-white/20 bg-ink/80 px-3 py-1 text-xs text-white/70"
+                  value={languageSlug ?? ""}
+                  onChange={(event) => onLanguageChange(event.target.value)}
+                >
+                  {languages.map((language) => (
+                    <option key={language.slug} value={language.slug}>
+                      {language.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
               <TimerDisplay elapsedMs={timerMs} />
             </div>
             <textarea
