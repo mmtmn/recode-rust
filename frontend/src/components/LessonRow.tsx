@@ -4,16 +4,19 @@ import type { Lesson } from "../lib/api";
 
 type Props = {
   lesson: Lesson;
-  onComplete: (lessonId: number) => void;
+  onSelect: (lessonId: number) => void;
   disabled?: boolean;
+  active?: boolean;
 };
 
-export default function LessonRow({ lesson, onComplete, disabled }: Props) {
+export default function LessonRow({ lesson, onSelect, disabled, active }: Props) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-white/10 bg-white/5 p-4"
+      className={`flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-white/10 bg-white/5 p-4 ${
+        active ? "border-ember/50 shadow-glow" : ""
+      }`}
     >
       <div>
         <p className="font-display text-lg text-white">{lesson.title}</p>
@@ -27,11 +30,11 @@ export default function LessonRow({ lesson, onComplete, disabled }: Props) {
           {lesson.xp} XP
         </div>
         <button
-          className="rounded-full bg-ember px-4 py-2 text-xs font-semibold text-ink transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
-          onClick={() => onComplete(lesson.id)}
+          className="rounded-full border border-white/20 px-4 py-2 text-xs font-semibold text-white/80 transition hover:border-white/50 disabled:cursor-not-allowed disabled:opacity-50"
+          onClick={() => onSelect(lesson.id)}
           disabled={disabled}
         >
-          Complete
+          Practice
         </button>
       </div>
     </motion.div>

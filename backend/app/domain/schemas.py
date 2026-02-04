@@ -58,3 +58,12 @@ class ProgressRead(BaseModel):
 class CompletionResponse(BaseModel):
     progress: ProgressRead
     new_achievements: List[AchievementRead]
+
+
+class ValidationRequest(BaseModel):
+    code: str
+
+
+class ValidationResult(BaseModel):
+    is_valid: bool
+    errors: List[str]

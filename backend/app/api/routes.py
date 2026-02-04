@@ -4,8 +4,9 @@ from sqlmodel import Session, select
 from app.core.db import get_session
 from app.domain import schemas
 from app.domain.models import Achievement, Challenge, Lesson
-from app.repositories import achievement_repo, language_repo, lesson_repo, progress_repo
+from app.repositories import achievement_repo, challenge_repo, language_repo, lesson_repo, progress_repo
 from app.services.progress_service import complete_lesson
+from app.services.validation_service import validate_code
 
 router = APIRouter(prefix="/api")
 
@@ -135,3 +136,19 @@ def complete_lesson_endpoint(lesson_id: int, session: Session = Depends(get_sess
             for achievement in new_achievements
         ],
     )
+
+
+@router.post("/challenges/{challenge_id}/validate", response_model=schemas.ValidationResult)
+def validate_challenge(
+    challenge_id: int,
+    payload: schemas.ValidationRequest,
+    session: Session = Depends(get_session),
+):
+    context = challenge_repo.get_challenge_context(session, challenge_id)
+    if not context:
+        raise HTTPException(status_code=404, detail="Challenge not found")
+
+    challenge, lesson, language = context
+    errors = validate_code(language.slug, payload.code)
+
+    return schemas.ValidationResult(is_valid=len(errors) == 0, errors=errors)

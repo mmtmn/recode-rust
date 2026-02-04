@@ -41,7 +41,27 @@ vi.mock("./lib/api", () => {
             }
           ]
         }),
-      completeLesson: () => Promise.resolve({ progress: { xp: 160, streak: 2, completed_lessons: 4 }, new_achievements: [] })
+      getLesson: () =>
+        Promise.resolve({
+          id: 1,
+          title: "Hello World",
+          summary: "",
+          difficulty: "Beginner",
+          order_index: 1,
+          xp: 40,
+          challenges: [
+            {
+              id: 10,
+              title: "Hello World Challenge",
+              prompt: "Print a greeting message.",
+              starter_code: "print('hello')",
+              tests: "Verify output and syntax.",
+              xp: 40
+            }
+          ]
+        }),
+      completeLesson: () => Promise.resolve({ progress: { xp: 160, streak: 2, completed_lessons: 4 }, new_achievements: [] }),
+      validateChallenge: () => Promise.resolve({ is_valid: true, errors: [] })
     }
   };
 });
@@ -52,7 +72,7 @@ describe("App", () => {
     render(<App />);
     expect(screen.getByText(/SyntaxQuest Beta/i)).toBeInTheDocument();
     await waitFor(() => {
-      expect(screen.getByText(/Python/i)).toBeInTheDocument();
+      expect(screen.getByText(/Syntax Lab/i)).toBeInTheDocument();
     });
   });
 });

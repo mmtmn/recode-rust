@@ -3,10 +3,11 @@ import { useEffect, useMemo, useState } from "react";
 
 import AchievementBadge from "./components/AchievementBadge";
 import AchievementToast from "./components/AchievementToast";
+import EditorPanel from "./components/EditorPanel";
 import LanguageCard from "./components/LanguageCard";
 import LessonRow from "./components/LessonRow";
 import ProgressPanel from "./components/ProgressPanel";
-import { api, Achievement, Language, LanguageDetail, Progress } from "./lib/api";
+import { api, Achievement, Language, LanguageDetail, LessonDetail, Progress, ValidationResult } from "./lib/api";
 
 const fadeIn = {
   hidden: { opacity: 0, y: 16 },
@@ -17,11 +18,16 @@ export default function App() {
   const [languages, setLanguages] = useState<Language[]>([]);
   const [selectedSlug, setSelectedSlug] = useState<string>("");
   const [languageDetail, setLanguageDetail] = useState<LanguageDetail | null>(null);
+  const [selectedLessonId, setSelectedLessonId] = useState<number | null>(null);
+  const [lessonDetail, setLessonDetail] = useState<LessonDetail | null>(null);
+  const [code, setCode] = useState("");
+  const [validation, setValidation] = useState<ValidationResult | null>(null);
   const [progress, setProgress] = useState<Progress | null>(null);
   const [achievements, setAchievements] = useState<Achievement[]>([]);
   const [toasts, setToasts] = useState<Achievement[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isCompleting, setIsCompleting] = useState(false);
+  const [isValidating, setIsValidating] = useState(false);
 
   useEffect(() => {
     let isActive = true;
@@ -55,6 +61,7 @@ export default function App() {
     api.getLanguage(selectedSlug).then((detail) => {
       if (isActive) {
         setLanguageDetail(detail);
+        setSelectedLessonId(detail.lessons[0]?.id ?? null);
       }
     });
     return () => {
@@ -62,7 +69,26 @@ export default function App() {
     };
   }, [selectedSlug]);
 
+  useEffect(() => {
+    if (!selectedLessonId) {
+      setLessonDetail(null);
+      return;
+    }
+    let isActive = true;
+    api.getLesson(selectedLessonId).then((detail) => {
+      if (isActive) {
+        setLessonDetail(detail);
+        setCode(detail.challenges[0]?.starter_code ?? "");
+        setValidation(null);
+      }
+    });
+    return () => {
+      isActive = false;
+    };
+  }, [selectedLessonId]);
+
   const topAchievements = useMemo(() => achievements.slice(0, 3), [achievements]);
+  const activeChallenge = lessonDetail?.challenges[0] ?? null;
 
   const handleCompleteLesson = async (lessonId: number) => {
     setIsCompleting(true);
@@ -74,6 +100,20 @@ export default function App() {
       }
     } finally {
       setIsCompleting(false);
+    }
+  };
+
+  const handleValidate = async () => {
+    if (!activeChallenge || !lessonDetail) return;
+    setIsValidating(true);
+    try {
+      const result = await api.validateChallenge(activeChallenge.id, code);
+      setValidation(result);
+      if (result.is_valid) {
+        await handleCompleteLesson(lessonDetail.id);
+      }
+    } finally {
+      setIsValidating(false);
     }
   };
 
@@ -171,25 +211,35 @@ export default function App() {
                 <LessonRow
                   key={lesson.id}
                   lesson={lesson}
-                  onComplete={handleCompleteLesson}
-                  disabled={isCompleting}
+                  onSelect={setSelectedLessonId}
+                  disabled={isCompleting || isValidating}
+                  active={lesson.id === selectedLessonId}
                 />
               ))}
             </div>
           </div>
-          <div className="space-y-4">
-            <div>
-              <p className="text-xs uppercase tracking-[0.3em] text-white/50">Achievements</p>
-              <h3 className="font-display text-2xl text-white">Collect rare milestones</h3>
-            </div>
-            <div className="space-y-3">
-              {topAchievements.map((achievement) => (
-                <AchievementBadge key={achievement.id} achievement={achievement} />
-              ))}
-            </div>
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-4 text-sm text-white/70">
-              Complete lessons to unlock more achievements and keep your streak alive.
-            </div>
+          <EditorPanel
+            challenge={activeChallenge}
+            code={code}
+            onCodeChange={setCode}
+            onValidate={handleValidate}
+            validation={validation}
+            isValidating={isValidating}
+          />
+        </section>
+
+        <section className="space-y-4">
+          <div>
+            <p className="text-xs uppercase tracking-[0.3em] text-white/50">Achievements</p>
+            <h3 className="font-display text-2xl text-white">Collect rare milestones</h3>
+          </div>
+          <div className="grid gap-3 md:grid-cols-2">
+            {topAchievements.map((achievement) => (
+              <AchievementBadge key={achievement.id} achievement={achievement} />
+            ))}
+          </div>
+          <div className="rounded-2xl border border-white/10 bg-white/5 p-4 text-sm text-white/70">
+            Validate syntax to claim XP, then keep your streak alive to unlock higher-tier achievements.
           </div>
         </section>
 
