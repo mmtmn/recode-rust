@@ -94,12 +94,14 @@ export default function EditorPanel({
 
           <div className="flex flex-wrap items-center gap-3">
             <button
-              className="rounded-full bg-ember px-5 py-2 text-xs font-semibold text-ink transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
+              className="group relative inline-flex items-center gap-2 rounded-full bg-ember px-5 py-2 text-xs font-semibold text-ink shadow-glow transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
               onClick={onValidate}
               disabled={isValidating}
             >
+              <span className="h-2 w-2 rounded-full bg-ink/60 transition group-hover:scale-110" />
               {isValidating ? "Validating..." : "Validate Syntax"}
             </button>
+            <span className="text-xs text-white/50">Tip: press Ctrl+Enter to run.</span>
             {showSuccess ? (
               <motion.span
                 initial={{ opacity: 0, y: 6 }}
