@@ -4,9 +4,8 @@ import { useEffect, useMemo, useState } from "react";
 import AchievementBadge from "./components/AchievementBadge";
 import AchievementToast from "./components/AchievementToast";
 import EditorPanel from "./components/EditorPanel";
-import LanguageCard from "./components/LanguageCard";
-import LessonRow from "./components/LessonRow";
-import ProgressPanel from "./components/ProgressPanel";
+import Sidebar from "./components/Sidebar";
+import StatusBar from "./components/StatusBar";
 import { api, Achievement, Language, LanguageDetail, LessonDetail, Progress, ValidationResult } from "./lib/api";
 
 const fadeIn = {
@@ -87,7 +86,7 @@ export default function App() {
     };
   }, [selectedLessonId]);
 
-  const topAchievements = useMemo(() => achievements.slice(0, 3), [achievements]);
+  const topAchievements = useMemo(() => achievements.slice(0, 4), [achievements]);
   const activeChallenge = lessonDetail?.challenges[0] ?? null;
 
   const handleCompleteLesson = async (lessonId: number) => {
@@ -126,151 +125,55 @@ export default function App() {
   }, [toasts]);
 
   return (
-    <div className="relative overflow-hidden">
+    <div className="relative min-h-screen overflow-hidden">
       <div className="pointer-events-none absolute -top-20 right-0 h-64 w-64 rounded-full bg-ember/20 blur-[90px]" />
       <div className="pointer-events-none absolute bottom-0 left-0 h-64 w-64 rounded-full bg-moss/20 blur-[110px]" />
 
-      <main className="mx-auto flex max-w-6xl flex-col gap-16 px-6 py-14">
-        <motion.section variants={fadeIn} initial="hidden" animate="show" className="grid gap-8 lg:grid-cols-[1.2fr_0.8fr]">
-          <div className="space-y-6">
-            <p className="text-xs uppercase tracking-[0.4em] text-white/50">SyntaxQuest Beta</p>
-            <h1 className="font-display text-4xl leading-tight text-white md:text-5xl">
-              LeetCode-style syntax drills for every core language.
-            </h1>
-            <p className="max-w-xl text-lg text-white/70">
-              Master fundamentals with bite-sized quests, instant XP, and achievement streaks. Designed for
-              learning the basics of the world's most important languages.
-            </p>
-            <div className="flex flex-wrap gap-4">
-              <button className="rounded-full bg-ember px-6 py-3 text-sm font-semibold text-ink transition hover:brightness-110">
-                Start a Quest
-              </button>
-              <button className="rounded-full border border-white/20 px-6 py-3 text-sm text-white/80 transition hover:border-white/50">
-                Explore Roadmap
-              </button>
-            </div>
-            <div className="grid grid-cols-2 gap-4 text-sm text-white/70 sm:grid-cols-3">
-              <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-                <p className="text-xs uppercase text-white/40">Languages</p>
-                <p className="mt-2 text-xl text-white">{languages.length}</p>
-              </div>
-              <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-                <p className="text-xs uppercase text-white/40">Lessons</p>
-                <p className="mt-2 text-xl text-white">{languages.length * 4}</p>
-              </div>
-              <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-                <p className="text-xs uppercase text-white/40">Achievements</p>
-                <p className="mt-2 text-xl text-white">{achievements.length}</p>
-              </div>
-            </div>
-          </div>
-          <ProgressPanel progress={progress} />
-        </motion.section>
+      <header className="mx-auto max-w-6xl px-6 pt-12">
+        <StatusBar progress={progress} activeLanguage={languageDetail?.name ?? null} />
+      </header>
 
-        <section className="space-y-6">
-          <div className="flex flex-wrap items-end justify-between gap-4">
-            <div>
-              <p className="text-xs uppercase tracking-[0.3em] text-white/50">Language Paths</p>
-              <h2 className="font-display text-3xl text-white">Pick your syntax adventure</h2>
-            </div>
-            <p className="text-sm text-white/60">Click a language to reveal its quest line.</p>
-          </div>
-          {isLoading ? (
-            <div className="rounded-3xl border border-white/10 bg-white/5 p-10 text-center text-white/60">
-              Loading languages...
-            </div>
-          ) : (
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {languages.map((language) => (
-                <LanguageCard
-                  key={language.id}
-                  language={language}
-                  isActive={language.slug === selectedSlug}
-                  onSelect={setSelectedSlug}
-                />
-              ))}
-            </div>
-          )}
-        </section>
+      <main className="mx-auto grid max-w-6xl gap-6 px-6 pb-12 pt-10 lg:grid-cols-[320px_1fr]">
+        <Sidebar
+          languages={languages}
+          selectedSlug={selectedSlug}
+          onSelectSlug={setSelectedSlug}
+          lessons={languageDetail?.lessons ?? []}
+          selectedLessonId={selectedLessonId}
+          onSelectLesson={setSelectedLessonId}
+          isLoading={isLoading}
+        />
 
-        <section className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
-          <div className="space-y-4">
+        <div className="space-y-6">
+          <motion.div variants={fadeIn} initial="hidden" animate="show">
+            <EditorPanel
+              challenge={activeChallenge}
+              code={code}
+              onCodeChange={setCode}
+              onValidate={handleValidate}
+              validation={validation}
+              isValidating={isValidating || isCompleting}
+            />
+          </motion.div>
+
+          <section className="rounded-3xl border border-white/10 bg-white/5 p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs uppercase tracking-[0.3em] text-white/50">Quest Line</p>
-                <h3 className="font-display text-2xl text-white">
-                  {languageDetail ? languageDetail.name : "Choose a language"}
-                </h3>
+                <p className="text-xs uppercase tracking-[0.3em] text-white/50">Achievements</p>
+                <h3 className="font-display text-2xl text-white">Recent milestones</h3>
               </div>
-              <div className="rounded-full border border-white/20 px-3 py-1 text-xs text-white/70">
-                {languageDetail?.lessons.length ?? 0} lessons
-              </div>
+              <span className="rounded-full border border-white/20 px-3 py-1 text-xs text-white/70">
+                {achievements.length} total
+              </span>
             </div>
-            <div className="space-y-3">
-              {languageDetail?.lessons.map((lesson) => (
-                <LessonRow
-                  key={lesson.id}
-                  lesson={lesson}
-                  onSelect={setSelectedLessonId}
-                  disabled={isCompleting || isValidating}
-                  active={lesson.id === selectedLessonId}
-                />
+            <div className="mt-4 grid gap-3 md:grid-cols-2">
+              {topAchievements.map((achievement) => (
+                <AchievementBadge key={achievement.id} achievement={achievement} />
               ))}
             </div>
-          </div>
-          <EditorPanel
-            challenge={activeChallenge}
-            code={code}
-            onCodeChange={setCode}
-            onValidate={handleValidate}
-            validation={validation}
-            isValidating={isValidating}
-          />
-        </section>
-
-        <section className="space-y-4">
-          <div>
-            <p className="text-xs uppercase tracking-[0.3em] text-white/50">Achievements</p>
-            <h3 className="font-display text-2xl text-white">Collect rare milestones</h3>
-          </div>
-          <div className="grid gap-3 md:grid-cols-2">
-            {topAchievements.map((achievement) => (
-              <AchievementBadge key={achievement.id} achievement={achievement} />
-            ))}
-          </div>
-          <div className="rounded-2xl border border-white/10 bg-white/5 p-4 text-sm text-white/70">
-            Validate syntax to claim XP, then keep your streak alive to unlock higher-tier achievements.
-          </div>
-        </section>
-
-        <motion.section variants={fadeIn} initial="hidden" whileInView="show" viewport={{ once: true }} className="grid gap-6 lg:grid-cols-3">
-          <div className="rounded-3xl border border-white/10 bg-white/5 p-6">
-            <p className="text-xs uppercase tracking-[0.3em] text-white/50">Instant feedback</p>
-            <h4 className="mt-3 font-display text-xl text-white">Syntax-first challenges</h4>
-            <p className="mt-3 text-sm text-white/70">
-              Every lesson focuses on real syntax patterns so learners can build muscle memory quickly.
-            </p>
-          </div>
-          <div className="rounded-3xl border border-white/10 bg-white/5 p-6">
-            <p className="text-xs uppercase tracking-[0.3em] text-white/50">Gamified core</p>
-            <h4 className="mt-3 font-display text-xl text-white">XP, streaks, and quests</h4>
-            <p className="mt-3 text-sm text-white/70">
-              Earn XP for completing lessons, keep a streak, and unlock achievements that celebrate progress.
-            </p>
-          </div>
-          <div className="rounded-3xl border border-white/10 bg-white/5 p-6">
-            <p className="text-xs uppercase tracking-[0.3em] text-white/50">Beautiful by default</p>
-            <h4 className="mt-3 font-display text-xl text-white">Cinematic learning flows</h4>
-            <p className="mt-3 text-sm text-white/70">
-              Bold visuals, subtle animation, and elegant layouts make every quest feel rewarding.
-            </p>
-          </div>
-        </motion.section>
+          </section>
+        </div>
       </main>
-
-      <footer className="border-t border-white/10 py-8 text-center text-xs text-white/40">
-        SyntaxQuest is a prototype learning experience built for core syntax mastery.
-      </footer>
 
       <div className="fixed right-6 top-6 z-50 flex w-72 flex-col gap-3">
         <AnimatePresence>

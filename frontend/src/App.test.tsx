@@ -68,11 +68,11 @@ vi.mock("./lib/api", () => {
 
 
 describe("App", () => {
-  it("renders hero content", async () => {
+  it("renders editor layout", async () => {
     render(<App />);
-    expect(screen.getByText(/SyntaxQuest Beta/i)).toBeInTheDocument();
+    expect(screen.getByText(/Syntax Lab/i)).toBeInTheDocument();
     await waitFor(() => {
-      expect(screen.getByText(/Syntax Lab/i)).toBeInTheDocument();
+      expect(screen.getByText(/Playlist/i)).toBeInTheDocument();
     });
   });
 });
