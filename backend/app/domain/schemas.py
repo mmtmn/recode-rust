@@ -68,3 +68,29 @@ class ValidationRequest(BaseModel):
 class ValidationResult(BaseModel):
     is_valid: bool
     errors: List[str]
+    new_best: bool = False
+    best_duration_ms: Optional[int] = None
+
+
+class SubmissionRequest(BaseModel):
+    code: str
+    duration_ms: int
+
+
+class AttemptRead(BaseModel):
+    lesson_id: int
+    lesson_title: str
+    language_slug: str
+    language_name: str
+    duration_ms: int
+    is_correct: bool
+    created_at: str
+
+
+class BestScoreRead(BaseModel):
+    lesson_id: int
+    lesson_title: str
+    language_slug: str
+    language_name: str
+    best_duration_ms: int
+    achieved_at: str

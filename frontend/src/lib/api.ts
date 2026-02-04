@@ -54,6 +54,27 @@ export type CompletionResponse = {
 export type ValidationResult = {
   is_valid: boolean;
   errors: string[];
+  new_best?: boolean;
+  best_duration_ms?: number | null;
+};
+
+export type AttemptRead = {
+  lesson_id: number;
+  lesson_title: string;
+  language_slug: string;
+  language_name: string;
+  duration_ms: number;
+  is_correct: boolean;
+  created_at: string;
+};
+
+export type BestScoreRead = {
+  lesson_id: number;
+  lesson_title: string;
+  language_slug: string;
+  language_name: string;
+  best_duration_ms: number;
+  achieved_at: string;
 };
 
 const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:8000";
@@ -76,10 +97,14 @@ export const api = {
     fetchJson<CompletionResponse>(`/api/lessons/${lessonId}/complete`, {
       method: "POST"
     }),
-  validateChallenge: (challengeId: number, code: string) =>
-    fetchJson<ValidationResult>(`/api/challenges/${challengeId}/validate`, {
+  validateChallenge: (challengeId: number, code: string, durationMs: number) =>
+    fetchJson<ValidationResult>(`/api/challenges/${challengeId}/submit`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ code })
-    })
+      body: JSON.stringify({ code, duration_ms: durationMs })
+    }),
+  listAttempts: (slugs: string[]) =>
+    fetchJson<AttemptRead[]>(`/api/stats/attempts?languages=${slugs.join(",")}`),
+  listBestScores: (slugs: string[]) =>
+    fetchJson<BestScoreRead[]>(`/api/stats/best?languages=${slugs.join(",")}`)
 };

@@ -3,10 +3,23 @@ import { useEffect, useMemo, useState } from "react";
 
 import AchievementBadge from "./components/AchievementBadge";
 import AchievementToast from "./components/AchievementToast";
+import ConfettiBurst from "./components/ConfettiBurst";
 import EditorPanel from "./components/EditorPanel";
 import Sidebar from "./components/Sidebar";
+import StatsModal from "./components/StatsModal";
 import StatusBar from "./components/StatusBar";
-import { api, Achievement, Language, LanguageDetail, LessonDetail, Progress, ValidationResult } from "./lib/api";
+import TimerDisplay from "./components/TimerDisplay";
+import {
+  api,
+  Achievement,
+  AttemptRead,
+  BestScoreRead,
+  Language,
+  LanguageDetail,
+  LessonDetail,
+  Progress,
+  ValidationResult
+} from "./lib/api";
 
 type PlaylistItem = {
   id: string;
@@ -35,12 +48,20 @@ export default function App() {
   const [progress, setProgress] = useState<Progress | null>(null);
   const [achievements, setAchievements] = useState<Achievement[]>([]);
   const [toasts, setToasts] = useState<Achievement[]>([]);
-  const [showAchievements, setShowAchievements] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isCompleting, setIsCompleting] = useState(false);
   const [isValidating, setIsValidating] = useState(false);
   const [playlistMode, setPlaylistMode] = useState<"all" | "multi">("multi");
   const [selectedSlugs, setSelectedSlugs] = useState<string[]>([]);
+  const [elapsedMs, setElapsedMs] = useState(0);
+  const [timerStart, setTimerStart] = useState<number | null>(null);
+  const [showAchievements, setShowAchievements] = useState(false);
+  const [showStats, setShowStats] = useState(false);
+  const [statsMode, setStatsMode] = useState<"history" | "best">("history");
+  const [statsAttempts, setStatsAttempts] = useState<AttemptRead[]>([]);
+  const [statsBest, setStatsBest] = useState<BestScoreRead[]>([]);
+  const [showConfetti, setShowConfetti] = useState(false);
+  const [bestToast, setBestToast] = useState<string | null>(null);
 
   useEffect(() => {
     let isActive = true;
@@ -116,7 +137,7 @@ export default function App() {
         });
     }
     return items;
-  }, [languages, languageMap, playlistMode, selectedSlugs]);
+  }, [languageMap, selectedSlugs]);
 
   const selectedItem = useMemo(
     () => playlist.find((item) => item.lessonId === selectedLessonId) ?? null,
@@ -153,6 +174,9 @@ export default function App() {
         setCode(combined);
         setValidation(null);
         setSuccessMessage(null);
+        const start = performance.now();
+        setTimerStart(start);
+        setElapsedMs(0);
       }
     });
     return () => {
@@ -165,6 +189,21 @@ export default function App() {
       setSelectedSlug(selectedItem.languageSlug);
     }
   }, [selectedItem]);
+
+  useEffect(() => {
+    if (timerStart === null) return;
+    const interval = window.setInterval(() => {
+      setElapsedMs(performance.now() - timerStart);
+    }, 50);
+    return () => window.clearInterval(interval);
+  }, [timerStart]);
+
+  useEffect(() => {
+    if (!showStats) return;
+    const slugs = selectedSlugs.length > 0 ? selectedSlugs : languages.map((lang) => lang.slug);
+    api.listAttempts(slugs).then(setStatsAttempts);
+    api.listBestScores(slugs).then(setStatsBest);
+  }, [showStats, statsMode, selectedSlugs, languages]);
 
   const topAchievements = useMemo(() => achievements.slice(0, 4), [achievements]);
   const activeChallenge = lessonDetail?.challenges[0] ?? null;
@@ -190,11 +229,18 @@ export default function App() {
   };
 
   const handleValidate = async () => {
-    if (!activeChallenge || !lessonDetail) return;
+    if (!activeChallenge || !lessonDetail || timerStart === null) return;
     setIsValidating(true);
     try {
-      const result = await api.validateChallenge(activeChallenge.id, code);
+      const durationMs = Math.max(1, Math.floor(performance.now() - timerStart));
+      const result = await api.validateChallenge(activeChallenge.id, code, durationMs);
       setValidation(result);
+      if (result.new_best) {
+        setShowConfetti(true);
+        setBestToast("New best time!");
+        window.setTimeout(() => setShowConfetti(false), 1600);
+        window.setTimeout(() => setBestToast(null), 3000);
+      }
       if (result.is_valid) {
         await handleCompleteLesson(lessonDetail.id);
         const nextItem = findNextPlaylistItem();
@@ -279,7 +325,11 @@ export default function App() {
       <div className="pointer-events-none absolute bottom-0 left-0 h-64 w-64 rounded-full bg-moss/20 blur-[110px]" />
 
       <header className="mx-auto max-w-6xl px-6 pt-12">
-        <StatusBar progress={progress} onOpenAchievements={() => setShowAchievements(true)} />
+        <StatusBar
+          progress={progress}
+          onOpenStats={() => setShowStats(true)}
+          onOpenAchievements={() => setShowAchievements(true)}
+        />
       </header>
 
       <main className="mx-auto grid max-w-6xl gap-6 px-6 pb-12 pt-10 lg:grid-cols-[320px_1fr]">
@@ -296,6 +346,10 @@ export default function App() {
         />
 
         <div className="space-y-6">
+          <div className="flex items-center gap-4">
+            <TimerDisplay elapsedMs={elapsedMs} />
+          </div>
+
           <motion.div variants={fadeIn} initial="hidden" animate="show">
             <EditorPanel
               challenge={activeChallenge}
@@ -313,39 +367,66 @@ export default function App() {
               successMessage={successMessage}
             />
           </motion.div>
-
-          {showAchievements ? (
-            <div className="fixed inset-0 z-40 flex items-center justify-center bg-ink/80 px-6">
-              <div className="w-full max-w-2xl rounded-3xl border border-white/10 bg-ink/95 p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-xs uppercase tracking-[0.3em] text-white/50">Achievements</p>
-                    <h3 className="font-display text-2xl text-white">Recent milestones</h3>
-                  </div>
-                  <button
-                    className="rounded-full border border-white/20 px-3 py-1 text-xs text-white/70 transition hover:border-white/50"
-                    onClick={() => setShowAchievements(false)}
-                  >
-                    Close
-                  </button>
-                </div>
-                <div className="mt-4 grid gap-3 md:grid-cols-2">
-                  {topAchievements.map((achievement) => (
-                    <AchievementBadge key={achievement.id} achievement={achievement} />
-                  ))}
-                </div>
-                <p className="mt-4 text-xs text-white/50">{achievements.length} total</p>
-              </div>
-            </div>
-          ) : null}
         </div>
       </main>
+
+      {showAchievements ? (
+        <div className="fixed inset-0 z-40 flex items-center justify-center bg-ink/80 px-6">
+          <div className="w-full max-w-2xl rounded-3xl border border-white/10 bg-ink/95 p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs uppercase tracking-[0.3em] text-white/50">Achievements</p>
+                <h3 className="font-display text-2xl text-white">Recent milestones</h3>
+              </div>
+              <button
+                className="rounded-full border border-white/20 px-3 py-1 text-xs text-white/70 transition hover:border-white/50"
+                onClick={() => setShowAchievements(false)}
+              >
+                Close
+              </button>
+            </div>
+            <div className="mt-4 grid gap-3 md:grid-cols-2">
+              {topAchievements.map((achievement) => (
+                <AchievementBadge key={achievement.id} achievement={achievement} />
+              ))}
+            </div>
+            <p className="mt-4 text-xs text-white/50">{achievements.length} total</p>
+          </div>
+        </div>
+      ) : null}
+
+      {showStats ? (
+        <StatsModal
+          mode={statsMode}
+          onChangeMode={setStatsMode}
+          attempts={statsAttempts}
+          bestScores={statsBest}
+          languages={languages}
+          selectedSlugs={selectedSlugs.length > 0 ? selectedSlugs : languages.map((lang) => lang.slug)}
+          onToggleLanguage={handleToggleLanguage}
+          onSelectAll={() => setSelectedSlugs(languages.map((lang) => lang.slug))}
+          onClose={() => setShowStats(false)}
+        />
+      ) : null}
+
+      {showConfetti ? <ConfettiBurst /> : null}
 
       <div className="fixed right-6 top-6 z-50 flex w-72 flex-col gap-3">
         <AnimatePresence>
           {toasts.map((toast) => (
             <AchievementToast key={`${toast.id}-${toast.key}`} achievement={toast} />
           ))}
+          {bestToast ? (
+            <motion.div
+              initial={{ opacity: 0, x: 40 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 40 }}
+              className="rounded-2xl border border-moss/50 bg-moss/10 p-4 text-white shadow-glow"
+            >
+              <p className="text-xs uppercase tracking-[0.3em] text-white/60">Personal Best</p>
+              <p className="mt-1 font-display text-base text-white">{bestToast}</p>
+            </motion.div>
+          ) : null}
         </AnimatePresence>
       </div>
     </div>

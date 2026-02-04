@@ -12,8 +12,8 @@ def test_validate_challenge_success(client):
     challenge_id = lesson_detail["challenges"][0]["id"]
 
     response = client.post(
-        f"/api/challenges/{challenge_id}/validate",
-        json={"code": "print('hi')"},
+        f"/api/challenges/{challenge_id}/submit",
+        json={"code": "print('hi')", "duration_ms": 1200},
     )
     assert response.status_code == 200
     assert response.json()["is_valid"] is True
@@ -25,8 +25,8 @@ def test_validate_challenge_empty(client):
     challenge_id = lesson_detail["challenges"][0]["id"]
 
     response = client.post(
-        f"/api/challenges/{challenge_id}/validate",
-        json={"code": ""},
+        f"/api/challenges/{challenge_id}/submit",
+        json={"code": "", "duration_ms": 1200},
     )
     assert response.status_code == 200
     assert response.json()["is_valid"] is False

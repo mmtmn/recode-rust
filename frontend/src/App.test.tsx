@@ -62,7 +62,7 @@ vi.mock("./lib/api", () => {
               id: 10,
               title: "Hello World Challenge",
               prompt: "Print a greeting message.",
-              starter_code: "print('hello')",
+              starter_code: "",
               solution_code: "print('hello')",
               tests: "Verify output and syntax.",
               xp: 40
@@ -70,14 +70,16 @@ vi.mock("./lib/api", () => {
           ]
         }),
       completeLesson: () => Promise.resolve({ progress: { xp: 160, streak: 2, completed_lessons: 4 }, new_achievements: [] }),
-      validateChallenge: () => Promise.resolve({ is_valid: true, errors: [] })
+      validateChallenge: () => Promise.resolve({ is_valid: true, errors: [], new_best: false, best_duration_ms: 1200 }),
+      listAttempts: () => Promise.resolve([]),
+      listBestScores: () => Promise.resolve([])
     }
   };
 });
 
 
 describe("App", () => {
-  it("renders editor layout", async () => {
+  it("renders header and playlist", async () => {
     render(<App />);
     expect(screen.getByText(/RECODE/i)).toBeInTheDocument();
     await waitFor(() => {

@@ -4,7 +4,8 @@ from sqlmodel import Session, select
 from app.core.db import get_session
 from app.domain import schemas
 from app.domain.models import Achievement, Challenge, Lesson
-from app.repositories import achievement_repo, challenge_repo, language_repo, lesson_repo, progress_repo
+from app.repositories import achievement_repo, attempt_repo, challenge_repo, language_repo, lesson_repo, progress_repo
+from app.services.attempt_service import record_attempt
 from app.services.progress_service import complete_lesson
 from app.services.validation_service import validate_code
 
@@ -153,3 +154,64 @@ def validate_challenge(
     errors = validate_code(language.slug, payload.code, challenge.solution_code)
 
     return schemas.ValidationResult(is_valid=len(errors) == 0, errors=errors)
+
+
+@router.post("/challenges/{challenge_id}/submit", response_model=schemas.ValidationResult)
+def submit_challenge(
+    challenge_id: int,
+    payload: schemas.SubmissionRequest,
+    session: Session = Depends(get_session),
+):
+    context = challenge_repo.get_challenge_context(session, challenge_id)
+    if not context:
+        raise HTTPException(status_code=404, detail="Challenge not found")
+
+    challenge, lesson, language = context
+    errors = validate_code(language.slug, payload.code, challenge.solution_code)
+    is_valid = len(errors) == 0
+    user = progress_repo.get_or_create_user(session)
+    best, new_best = record_attempt(session, user, lesson.id, payload.duration_ms, is_valid)
+
+    return schemas.ValidationResult(
+        is_valid=is_valid,
+        errors=errors,
+        new_best=new_best,
+        best_duration_ms=best.best_duration_ms if best else None,
+    )
+
+
+@router.get("/stats/attempts", response_model=list[schemas.AttemptRead])
+def list_attempts(languages: str | None = None, session: Session = Depends(get_session)):
+    user = progress_repo.get_or_create_user(session)
+    slugs = [slug.strip() for slug in languages.split(",")] if languages else None
+    rows = attempt_repo.list_attempts(session, user.id, slugs)
+    return [
+        schemas.AttemptRead(
+            lesson_id=lesson.id,
+            lesson_title=lesson.title,
+            language_slug=language.slug,
+            language_name=language.name,
+            duration_ms=attempt.duration_ms,
+            is_correct=attempt.is_correct,
+            created_at=attempt.created_at.isoformat(),
+        )
+        for attempt, lesson, language in rows
+    ]
+
+
+@router.get("/stats/best", response_model=list[schemas.BestScoreRead])
+def list_best_scores(languages: str | None = None, session: Session = Depends(get_session)):
+    user = progress_repo.get_or_create_user(session)
+    slugs = [slug.strip() for slug in languages.split(",")] if languages else None
+    rows = attempt_repo.list_best_scores(session, user.id, slugs)
+    return [
+        schemas.BestScoreRead(
+            lesson_id=lesson.id,
+            lesson_title=lesson.title,
+            language_slug=language.slug,
+            language_name=language.name,
+            best_duration_ms=best.best_duration_ms,
+            achieved_at=best.achieved_at.isoformat(),
+        )
+        for best, lesson, language in rows
+    ]

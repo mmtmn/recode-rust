@@ -85,3 +85,20 @@ class UserAchievement(BaseModel, table=True):
 
     user: Optional[UserProfile] = Relationship(back_populates="achievements")
     achievement: Optional[Achievement] = Relationship(back_populates="unlocks")
+
+
+class Attempt(BaseModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    user_id: int = Field(foreign_key="userprofile.id")
+    lesson_id: int = Field(foreign_key="lesson.id")
+    duration_ms: int
+    is_correct: bool
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+
+class BestScore(BaseModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    user_id: int = Field(foreign_key="userprofile.id")
+    lesson_id: int = Field(foreign_key="lesson.id")
+    best_duration_ms: int
+    achieved_at: datetime = Field(default_factory=datetime.utcnow)
