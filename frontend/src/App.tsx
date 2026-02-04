@@ -148,7 +148,7 @@ export default function App() {
         })();
         const instruction = prompt ? `${commentPrefix}${prompt}` : "";
         const starter = challenge?.starter_code ?? "";
-        const combined = [instruction, starter].filter(Boolean).join("\n");
+        const combined = instruction ? `${instruction}\n\n${starter}`.trimEnd() + "\n" : starter;
         setCode(combined);
         setValidation(null);
         setSuccessMessage(null);
