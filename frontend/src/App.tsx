@@ -90,7 +90,7 @@ export default function App() {
   }, [languages]);
 
   const playlist = useMemo<PlaylistItem[]>(() => {
-    const slugs = playlistMode === "all" ? languages.map((lang) => lang.slug) : selectedSlugs;
+    const slugs = selectedSlugs;
     const details = slugs
       .map((slug) => languageMap[slug])
       .filter((detail): detail is LanguageDetail => Boolean(detail));
@@ -242,6 +242,29 @@ export default function App() {
     }
   };
 
+  const getFirstLessonIdForSlug = (slug: string) => {
+    const detail = languageMap[slug];
+    if (!detail) return null;
+    const sorted = [...detail.lessons].sort((a, b) => a.order_index - b.order_index);
+    return sorted[0]?.id ?? null;
+  };
+
+  const handleLanguageChange = (slug: string) => {
+    setSelectedSlug(slug);
+    setSelectedSlugs((prev) => {
+      const filtered = prev.filter((item) => item !== slug);
+      if (playlistMode === "all") {
+        const all = languages.map((lang) => lang.slug).filter((item) => item !== slug);
+        return [slug, ...all];
+      }
+      return [slug, ...filtered];
+    });
+    const firstLessonId = getFirstLessonIdForSlug(slug);
+    if (firstLessonId) {
+      setSelectedLessonId(firstLessonId);
+    }
+  };
+
   const handleSelectItem = (itemId: string) => {
     const item = playlist.find((entry) => entry.id === itemId);
     if (!item) return;
@@ -278,9 +301,12 @@ export default function App() {
               lessonTitle={lessonDetail?.title}
               lessonSummary={lessonDetail?.summary}
               languageName={selectedItem?.languageName ?? null}
+              languageSlug={selectedItem?.languageSlug ?? null}
+              languages={languages}
               code={code}
               onCodeChange={setCode}
               onValidate={handleValidate}
+              onLanguageChange={handleLanguageChange}
               validation={validation}
               isValidating={isValidating || isCompleting}
               successMessage={successMessage}

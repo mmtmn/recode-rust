@@ -1,15 +1,18 @@
 import { AnimatePresence, motion } from "framer-motion";
 
-import type { Challenge, ValidationResult } from "../lib/api";
+import type { Challenge, Language, ValidationResult } from "../lib/api";
 
 type Props = {
   challenge: Challenge | null;
   lessonTitle?: string | null;
   lessonSummary?: string | null;
   languageName?: string | null;
+  languageSlug?: string | null;
+  languages: Language[];
   code: string;
   onCodeChange: (value: string) => void;
   onValidate: () => void;
+  onLanguageChange: (slug: string) => void;
   validation: ValidationResult | null;
   isValidating: boolean;
   successMessage?: string | null;
@@ -20,9 +23,12 @@ export default function EditorPanel({
   lessonTitle,
   lessonSummary,
   languageName,
+  languageSlug,
+  languages,
   code,
   onCodeChange,
   onValidate,
+  onLanguageChange,
   validation,
   isValidating,
   successMessage
@@ -46,14 +52,18 @@ export default function EditorPanel({
       {challenge ? (
         <div className="mt-4 space-y-4">
           <div>
-            <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
               <label className="text-xs uppercase tracking-[0.2em] text-white/40">Code</label>
               <select
                 className="rounded-full border border-white/20 bg-ink/80 px-3 py-1 text-xs text-white/70"
-                value={languageName ?? ""}
-                disabled
+                value={languageSlug ?? ""}
+                onChange={(event) => onLanguageChange(event.target.value)}
               >
-                <option value={languageName ?? ""}>{languageName ?? "Language"}</option>
+                {languages.map((language) => (
+                  <option key={language.slug} value={language.slug}>
+                    {language.name}
+                  </option>
+                ))}
               </select>
             </div>
             <textarea
