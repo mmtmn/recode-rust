@@ -56,7 +56,7 @@ export default function App() {
         setAchievements(achievementData);
         const firstSlug = languageData[0]?.slug ?? "";
         setSelectedSlug(firstSlug);
-        setSelectedSlugs(languageData.map((lang) => lang.slug));
+        setSelectedSlugs(firstSlug ? [firstSlug] : []);
       } finally {
         if (isActive) {
           setIsLoading(false);
@@ -222,6 +222,16 @@ export default function App() {
     });
   };
 
+  const handleChangeMode = (mode: "all" | "multi") => {
+    setPlaylistMode(mode);
+    if (mode === "multi") {
+      setSelectedSlugs(selectedSlug ? [selectedSlug] : []);
+    }
+    if (mode === "all") {
+      setSelectedSlugs(languages.map((lang) => lang.slug));
+    }
+  };
+
   const handleSelectItem = (itemId: string) => {
     const item = playlist.find((entry) => entry.id === itemId);
     if (!item) return;
@@ -248,7 +258,7 @@ export default function App() {
           onSelectItem={handleSelectItem}
           isLoading={isLoading}
           playlistMode={playlistMode}
-          onChangeMode={setPlaylistMode}
+          onChangeMode={handleChangeMode}
           selectedSlugs={selectedSlugs}
           onToggleLanguage={handleToggleLanguage}
         />

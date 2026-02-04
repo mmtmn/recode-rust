@@ -68,6 +68,11 @@ export default function EditorPanel({
               value={code}
               onChange={(event) => onCodeChange(event.target.value)}
               onKeyDown={(event) => {
+                if ((event.ctrlKey || event.metaKey) && event.key === "Enter") {
+                  event.preventDefault();
+                  onValidate();
+                  return;
+                }
                 if (event.key === "Tab") {
                   event.preventDefault();
                   const target = event.currentTarget;
