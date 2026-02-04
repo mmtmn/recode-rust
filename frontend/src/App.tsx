@@ -8,6 +8,16 @@ import Sidebar from "./components/Sidebar";
 import StatusBar from "./components/StatusBar";
 import { api, Achievement, Language, LanguageDetail, LessonDetail, Progress, ValidationResult } from "./lib/api";
 
+type PlaylistItem = {
+  id: string;
+  lessonId: number;
+  languageSlug: string;
+  languageName: string;
+  title: string;
+  summary: string;
+  orderIndex: number;
+};
+
 const fadeIn = {
   hidden: { opacity: 0, y: 16 },
   show: { opacity: 1, y: 0, transition: { duration: 0.6 } }
@@ -15,8 +25,8 @@ const fadeIn = {
 
 export default function App() {
   const [languages, setLanguages] = useState<Language[]>([]);
+  const [languageMap, setLanguageMap] = useState<Record<string, LanguageDetail>>({});
   const [selectedSlug, setSelectedSlug] = useState<string>("");
-  const [languageDetail, setLanguageDetail] = useState<LanguageDetail | null>(null);
   const [selectedLessonId, setSelectedLessonId] = useState<number | null>(null);
   const [lessonDetail, setLessonDetail] = useState<LessonDetail | null>(null);
   const [code, setCode] = useState("");
@@ -28,6 +38,8 @@ export default function App() {
   const [isLoading, setIsLoading] = useState(true);
   const [isCompleting, setIsCompleting] = useState(false);
   const [isValidating, setIsValidating] = useState(false);
+  const [playlistMode, setPlaylistMode] = useState<"all" | "multi">("all");
+  const [selectedSlugs, setSelectedSlugs] = useState<string[]>([]);
 
   useEffect(() => {
     let isActive = true;
@@ -42,7 +54,9 @@ export default function App() {
         setLanguages(languageData);
         setProgress(progressData);
         setAchievements(achievementData);
-        setSelectedSlug(languageData[0]?.slug ?? "");
+        const firstSlug = languageData[0]?.slug ?? "";
+        setSelectedSlug(firstSlug);
+        setSelectedSlugs(languageData.map((lang) => lang.slug));
       } finally {
         if (isActive) {
           setIsLoading(false);
@@ -56,18 +70,65 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    if (!selectedSlug) return;
+    if (languages.length === 0) return;
     let isActive = true;
-    api.getLanguage(selectedSlug).then((detail) => {
-      if (isActive) {
-        setLanguageDetail(detail);
-        setSelectedLessonId(detail.lessons[0]?.id ?? null);
-      }
-    });
+    async function loadDetails() {
+      const entries = await Promise.all(
+        languages.map(async (lang) => {
+          const detail = await api.getLanguage(lang.slug);
+          return [lang.slug, detail] as const;
+        })
+      );
+      if (!isActive) return;
+      setLanguageMap(Object.fromEntries(entries));
+    }
+    loadDetails();
     return () => {
       isActive = false;
     };
-  }, [selectedSlug]);
+  }, [languages]);
+
+  const playlist = useMemo<PlaylistItem[]>(() => {
+    const slugs = playlistMode === "all" ? languages.map((lang) => lang.slug) : selectedSlugs;
+    const details = slugs
+      .map((slug) => languageMap[slug])
+      .filter((detail): detail is LanguageDetail => Boolean(detail));
+    if (details.length === 0) return [];
+
+    const maxOrder = Math.max(...details.flatMap((detail) => detail.lessons.map((lesson) => lesson.order_index)));
+    const items: PlaylistItem[] = [];
+    for (let order = 1; order <= maxOrder; order += 1) {
+      details
+        .filter((detail) => detail.lessons.some((lesson) => lesson.order_index === order))
+        .sort((a, b) => a.name.localeCompare(b.name))
+        .forEach((detail) => {
+          const lesson = detail.lessons.find((lesson) => lesson.order_index === order);
+          if (!lesson) return;
+          items.push({
+            id: `${detail.slug}-${lesson.id}`,
+            lessonId: lesson.id,
+            languageSlug: detail.slug,
+            languageName: detail.name,
+            title: lesson.title,
+            summary: lesson.summary,
+            orderIndex: lesson.order_index
+          });
+        });
+    }
+    return items;
+  }, [languages, languageMap, playlistMode, selectedSlugs]);
+
+  const selectedItem = useMemo(
+    () => playlist.find((item) => item.lessonId === selectedLessonId) ?? null,
+    [playlist, selectedLessonId]
+  );
+
+  useEffect(() => {
+    if (!selectedItem && playlist.length > 0) {
+      setSelectedLessonId(playlist[0].lessonId);
+      setSelectedSlug(playlist[0].languageSlug);
+    }
+  }, [playlist, selectedItem]);
 
   useEffect(() => {
     if (!selectedLessonId) {
@@ -88,14 +149,20 @@ export default function App() {
     };
   }, [selectedLessonId]);
 
+  useEffect(() => {
+    if (selectedItem) {
+      setSelectedSlug(selectedItem.languageSlug);
+    }
+  }, [selectedItem]);
+
   const topAchievements = useMemo(() => achievements.slice(0, 4), [achievements]);
   const activeChallenge = lessonDetail?.challenges[0] ?? null;
 
-  const findNextLessonId = (lessonId: number) => {
-    const lessons = languageDetail?.lessons ?? [];
-    const index = lessons.findIndex((lesson) => lesson.id === lessonId);
+  const findNextPlaylistItem = () => {
+    if (!selectedItem) return null;
+    const index = playlist.findIndex((item) => item.id === selectedItem.id);
     if (index < 0) return null;
-    return lessons[index + 1]?.id ?? null;
+    return playlist[index + 1] ?? null;
   };
 
   const handleCompleteLesson = async (lessonId: number) => {
@@ -119,11 +186,12 @@ export default function App() {
       setValidation(result);
       if (result.is_valid) {
         await handleCompleteLesson(lessonDetail.id);
-        const nextLessonId = findNextLessonId(lessonDetail.id);
-        if (nextLessonId) {
+        const nextItem = findNextPlaylistItem();
+        if (nextItem) {
           setSuccessMessage("Looks good. Moving to the next activity.");
           window.setTimeout(() => {
-            setSelectedLessonId(nextLessonId);
+            setSelectedLessonId(nextItem.lessonId);
+            setSelectedSlug(nextItem.languageSlug);
           }, 1200);
         } else {
           setSuccessMessage("Great work. You finished this playlist.");
@@ -144,13 +212,30 @@ export default function App() {
     return () => window.clearTimeout(timeout);
   }, [toasts]);
 
+  const handleToggleLanguage = (slug: string) => {
+    setSelectedSlugs((prev) => {
+      if (prev.includes(slug)) {
+        const next = prev.filter((item) => item !== slug);
+        return next.length > 0 ? next : prev;
+      }
+      return [...prev, slug];
+    });
+  };
+
+  const handleSelectItem = (itemId: string) => {
+    const item = playlist.find((entry) => entry.id === itemId);
+    if (!item) return;
+    setSelectedLessonId(item.lessonId);
+    setSelectedSlug(item.languageSlug);
+  };
+
   return (
     <div className="relative min-h-screen overflow-hidden">
       <div className="pointer-events-none absolute -top-20 right-0 h-64 w-64 rounded-full bg-ember/20 blur-[90px]" />
       <div className="pointer-events-none absolute bottom-0 left-0 h-64 w-64 rounded-full bg-moss/20 blur-[110px]" />
 
       <header className="mx-auto max-w-6xl px-6 pt-12">
-        <StatusBar progress={progress} activeLanguage={languageDetail?.name ?? null} />
+        <StatusBar progress={progress} activeLanguage={selectedItem?.languageName ?? null} />
       </header>
 
       <main className="mx-auto grid max-w-6xl gap-6 px-6 pb-12 pt-10 lg:grid-cols-[320px_1fr]">
@@ -158,10 +243,14 @@ export default function App() {
           languages={languages}
           selectedSlug={selectedSlug}
           onSelectSlug={setSelectedSlug}
-          lessons={languageDetail?.lessons ?? []}
-          selectedLessonId={selectedLessonId}
-          onSelectLesson={setSelectedLessonId}
+          playlist={playlist}
+          selectedItemId={selectedItem?.id ?? null}
+          onSelectItem={handleSelectItem}
           isLoading={isLoading}
+          playlistMode={playlistMode}
+          onChangeMode={setPlaylistMode}
+          selectedSlugs={selectedSlugs}
+          onToggleLanguage={handleToggleLanguage}
         />
 
         <div className="space-y-6">

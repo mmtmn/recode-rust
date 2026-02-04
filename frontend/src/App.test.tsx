@@ -15,6 +15,14 @@ vi.mock("./lib/api", () => {
             description: "Readable",
             color: "#000",
             icon: "snake"
+          },
+          {
+            id: 2,
+            name: "JavaScript",
+            slug: "javascript",
+            description: "Web",
+            color: "#111",
+            icon: "bolt"
           }
         ]),
       getProgress: () => Promise.resolve({ xp: 120, streak: 2, completed_lessons: 3 }),
@@ -22,17 +30,17 @@ vi.mock("./lib/api", () => {
         Promise.resolve([
           { id: 1, key: "first_lesson", title: "First Steps", description: "", icon: "spark", points: 50 }
         ]),
-      getLanguage: () =>
+      getLanguage: (slug: string) =>
         Promise.resolve({
-          id: 1,
-          name: "Python",
-          slug: "python",
+          id: slug === "python" ? 1 : 2,
+          name: slug === "python" ? "Python" : "JavaScript",
+          slug,
           description: "Readable",
           color: "#000",
           icon: "snake",
           lessons: [
             {
-              id: 1,
+              id: slug === "python" ? 1 : 2,
               title: "Hello World",
               summary: "",
               difficulty: "Beginner",
@@ -71,9 +79,9 @@ vi.mock("./lib/api", () => {
 describe("App", () => {
   it("renders editor layout", async () => {
     render(<App />);
-    expect(screen.getByText(/Developer Syntax Studio/i)).toBeInTheDocument();
+    expect(screen.getByText(/Syntax Training/i)).toBeInTheDocument();
     await waitFor(() => {
-      expect(screen.getByText(/Playlist/i)).toBeInTheDocument();
+      expect(screen.getByText(/Playlist mode/i)).toBeInTheDocument();
     });
   });
 });
