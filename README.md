@@ -1,5 +1,11 @@
 # Recode
 
+
+https://github.com/user-attachments/assets/3f7359e7-4775-4127-b681-fb522eefd26c
+
+
+
+
 Developer-first syntax drills with instant feedback, playlists, and a focused editor experience. Built to emphasize clean architecture, SOLID, DRY, and test coverage across unit, integration, and E2E layers.
 
 ## Stack
