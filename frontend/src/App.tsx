@@ -35,6 +35,7 @@ export default function App() {
   const [progress, setProgress] = useState<Progress | null>(null);
   const [achievements, setAchievements] = useState<Achievement[]>([]);
   const [toasts, setToasts] = useState<Achievement[]>([]);
+  const [showAchievements, setShowAchievements] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isCompleting, setIsCompleting] = useState(false);
   const [isValidating, setIsValidating] = useState(false);
@@ -139,7 +140,17 @@ export default function App() {
     api.getLesson(selectedLessonId).then((detail) => {
       if (isActive) {
         setLessonDetail(detail);
-        setCode(detail.challenges[0]?.starter_code ?? "");
+        const challenge = detail.challenges[0];
+        const prompt = challenge?.prompt ?? "";
+        const commentPrefix = (() => {
+          if (selectedSlug === "python") return "# ";
+          if (selectedSlug === "sql") return "-- ";
+          return "// ";
+        })();
+        const instruction = prompt ? `${commentPrefix}${prompt}` : "";
+        const starter = challenge?.starter_code ?? "";
+        const combined = [instruction, starter].filter(Boolean).join("\n");
+        setCode(combined);
         setValidation(null);
         setSuccessMessage(null);
       }
@@ -245,7 +256,7 @@ export default function App() {
       <div className="pointer-events-none absolute bottom-0 left-0 h-64 w-64 rounded-full bg-moss/20 blur-[110px]" />
 
       <header className="mx-auto max-w-6xl px-6 pt-12">
-        <StatusBar progress={progress} activeLanguage={selectedItem?.languageName ?? null} />
+        <StatusBar progress={progress} onOpenAchievements={() => setShowAchievements(true)} />
       </header>
 
       <main className="mx-auto grid max-w-6xl gap-6 px-6 pb-12 pt-10 lg:grid-cols-[320px_1fr]">
@@ -277,22 +288,30 @@ export default function App() {
             />
           </motion.div>
 
-          <section className="rounded-3xl border border-white/10 bg-white/5 p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs uppercase tracking-[0.3em] text-white/50">Achievements</p>
-                <h3 className="font-display text-2xl text-white">Recent milestones</h3>
+          {showAchievements ? (
+            <div className="fixed inset-0 z-40 flex items-center justify-center bg-ink/80 px-6">
+              <div className="w-full max-w-2xl rounded-3xl border border-white/10 bg-ink/95 p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs uppercase tracking-[0.3em] text-white/50">Achievements</p>
+                    <h3 className="font-display text-2xl text-white">Recent milestones</h3>
+                  </div>
+                  <button
+                    className="rounded-full border border-white/20 px-3 py-1 text-xs text-white/70 transition hover:border-white/50"
+                    onClick={() => setShowAchievements(false)}
+                  >
+                    Close
+                  </button>
+                </div>
+                <div className="mt-4 grid gap-3 md:grid-cols-2">
+                  {topAchievements.map((achievement) => (
+                    <AchievementBadge key={achievement.id} achievement={achievement} />
+                  ))}
+                </div>
+                <p className="mt-4 text-xs text-white/50">{achievements.length} total</p>
               </div>
-              <span className="rounded-full border border-white/20 px-3 py-1 text-xs text-white/70">
-                {achievements.length} total
-              </span>
             </div>
-            <div className="mt-4 grid gap-3 md:grid-cols-2">
-              {topAchievements.map((achievement) => (
-                <AchievementBadge key={achievement.id} achievement={achievement} />
-              ))}
-            </div>
-          </section>
+          ) : null}
         </div>
       </main>
 

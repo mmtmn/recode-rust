@@ -41,28 +41,10 @@ export default function EditorPanel({
           <p className="text-xs uppercase tracking-[0.3em] text-white/50">Editor</p>
           <h3 className="font-display text-2xl text-white">{lessonTitle ?? "Select a lesson"}</h3>
         </div>
-        <div className="rounded-full border border-white/20 px-3 py-1 text-xs text-white/70">Recode Studio</div>
       </div>
 
       {challenge ? (
         <div className="mt-4 space-y-4">
-          <div className="grid gap-3 md:grid-cols-[1.1fr_0.9fr]">
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-              <p className="text-xs uppercase tracking-[0.2em] text-white/40">Lesson goal</p>
-              <p className="mt-2 text-sm text-white/80">{lessonSummary}</p>
-              <p className="mt-3 text-xs uppercase tracking-[0.2em] text-white/40">Focus</p>
-              <p className="mt-1 text-sm text-white/70">
-                Keep variable names clear, align types with values, and print the result.
-              </p>
-            </div>
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-              <p className="text-xs uppercase tracking-[0.2em] text-white/40">What to do</p>
-              <p className="mt-2 text-sm text-white/80">{challenge.prompt}</p>
-              <p className="mt-3 text-xs uppercase tracking-[0.2em] text-white/40">Expected</p>
-              <p className="mt-1 text-sm text-white/70">{challenge.tests}</p>
-            </div>
-          </div>
-
           <div>
             <div className="flex flex-wrap items-center justify-between gap-3">
               <label className="text-xs uppercase tracking-[0.2em] text-white/40">Code</label>
