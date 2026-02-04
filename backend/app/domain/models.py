@@ -6,7 +6,11 @@ from typing import List, Optional
 from sqlmodel import Field, Relationship, SQLModel
 
 
-class Language(SQLModel, table=True):
+class BaseModel(SQLModel):
+    __allow_unmapped__ = True
+
+
+class Language(BaseModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     name: str
     slug: str = Field(index=True, sa_column_kwargs={"unique": True})
@@ -17,7 +21,7 @@ class Language(SQLModel, table=True):
     lessons: List["Lesson"] = Relationship(back_populates="language")
 
 
-class Lesson(SQLModel, table=True):
+class Lesson(BaseModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     language_id: int = Field(foreign_key="language.id")
     title: str
@@ -30,7 +34,7 @@ class Lesson(SQLModel, table=True):
     challenges: List["Challenge"] = Relationship(back_populates="lesson")
 
 
-class Challenge(SQLModel, table=True):
+class Challenge(BaseModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     lesson_id: int = Field(foreign_key="lesson.id")
     title: str
@@ -43,7 +47,7 @@ class Challenge(SQLModel, table=True):
     lesson: Optional[Lesson] = Relationship(back_populates="challenges")
 
 
-class Achievement(SQLModel, table=True):
+class Achievement(BaseModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     key: str = Field(index=True, sa_column_kwargs={"unique": True})
     title: str
@@ -54,7 +58,7 @@ class Achievement(SQLModel, table=True):
     unlocks: List["UserAchievement"] = Relationship(back_populates="achievement")
 
 
-class UserProfile(SQLModel, table=True):
+class UserProfile(BaseModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     name: str
     xp: int = 0
@@ -66,7 +70,7 @@ class UserProfile(SQLModel, table=True):
     achievements: List["UserAchievement"] = Relationship(back_populates="user")
 
 
-class LessonCompletion(SQLModel, table=True):
+class LessonCompletion(BaseModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     user_id: int = Field(foreign_key="userprofile.id")
     lesson_id: int = Field(foreign_key="lesson.id")
@@ -75,7 +79,7 @@ class LessonCompletion(SQLModel, table=True):
     user: Optional[UserProfile] = Relationship(back_populates="completions")
 
 
-class UserAchievement(SQLModel, table=True):
+class UserAchievement(BaseModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     user_id: int = Field(foreign_key="userprofile.id")
     achievement_id: int = Field(foreign_key="achievement.id")
