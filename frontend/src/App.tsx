@@ -101,7 +101,6 @@ export default function App() {
     for (let order = 1; order <= maxOrder; order += 1) {
       details
         .filter((detail) => detail.lessons.some((lesson) => lesson.order_index === order))
-        .sort((a, b) => a.name.localeCompare(b.name))
         .forEach((detail) => {
           const lesson = detail.lessons.find((lesson) => lesson.order_index === order);
           if (!lesson) return;
