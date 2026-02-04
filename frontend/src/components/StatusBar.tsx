@@ -17,18 +17,20 @@ export default function StatusBar({ progress, onOpenStats, onOpenAchievements }:
         <h1 className="font-display text-3xl text-white">RECODE</h1>
       </div>
       <div className="flex flex-wrap items-center gap-4 text-sm text-white/70">
-        <button
-          className="rounded-full border border-white/20 px-4 py-2 text-xs uppercase tracking-[0.2em] text-white/70 transition hover:border-white/50"
-          onClick={onOpenStats}
-        >
-          Stats
-        </button>
-        <button
-          className="rounded-full border border-white/20 px-4 py-2 text-xs uppercase tracking-[0.2em] text-white/70 transition hover:border-white/50"
-          onClick={onOpenAchievements}
-        >
-          Achievements
-        </button>
+        <div className="flex flex-col gap-2">
+          <button
+            className="rounded-2xl border border-white/20 px-4 py-1.5 text-xs uppercase tracking-[0.2em] text-white/70 transition hover:border-white/50"
+            onClick={onOpenStats}
+          >
+            Stats
+          </button>
+          <button
+            className="rounded-2xl border border-white/20 px-4 py-1.5 text-xs uppercase tracking-[0.2em] text-white/70 transition hover:border-white/50"
+            onClick={onOpenAchievements}
+          >
+            Achievements
+          </button>
+        </div>
         <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2">
           <p className="text-xs uppercase text-white/50">XP</p>
           <p className="text-lg text-white">{xp}</p>

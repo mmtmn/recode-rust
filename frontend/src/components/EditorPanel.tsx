@@ -11,6 +11,8 @@ type Props = {
   languageSlug?: string | null;
   languages: Language[];
   timerMs: number;
+  timerEnabled: boolean;
+  onToggleTimer: () => void;
   code: string;
   onCodeChange: (value: string) => void;
   onValidate: () => void;
@@ -28,6 +30,8 @@ export default function EditorPanel({
   languageSlug,
   languages,
   timerMs,
+  timerEnabled,
+  onToggleTimer,
   code,
   onCodeChange,
   onValidate,
@@ -50,10 +54,8 @@ export default function EditorPanel({
           <div>
             <p className="text-xs uppercase tracking-[0.3em] text-white/50">Task</p>
             <h3 className="font-display text-2xl text-white">{lessonTitle ?? "Select a lesson"}</h3>
-          </div>
-          <div className="flex items-center gap-3">
             <select
-              className="w-fit rounded-full border border-white/20 bg-ink/80 px-3 py-1 text-xs text-white/70"
+              className="mt-2 w-fit rounded-full border border-white/20 bg-ink/80 px-3 py-1 text-xs text-white/70"
               value={languageSlug ?? ""}
               onChange={(event) => onLanguageChange(event.target.value)}
             >
@@ -63,7 +65,14 @@ export default function EditorPanel({
                 </option>
               ))}
             </select>
-            <TimerDisplay elapsedMs={timerMs} variant="large" />
+          </div>
+          <div className="flex items-center gap-3">
+            <TimerDisplay
+              elapsedMs={timerMs}
+              variant="large"
+              enabled={timerEnabled}
+              onToggle={onToggleTimer}
+            />
           </div>
         </div>
         <div />

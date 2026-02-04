@@ -56,6 +56,7 @@ export default function App() {
   const [elapsedMs, setElapsedMs] = useState(0);
   const [timerStart, setTimerStart] = useState<number | null>(null);
   const [initialCode, setInitialCode] = useState("");
+  const [timerEnabled, setTimerEnabled] = useState(false);
   const [showAchievements, setShowAchievements] = useState(false);
   const [showStats, setShowStats] = useState(false);
   const [statsMode, setStatsMode] = useState<"history" | "best">("history");
@@ -200,10 +201,21 @@ export default function App() {
   }, [timerStart]);
 
   const handleCodeChange = (value: string) => {
-    if (timerStart === null && value !== initialCode) {
+    if (timerEnabled && timerStart === null && value !== initialCode) {
       setTimerStart(performance.now());
     }
     setCode(value);
+  };
+
+  const handleToggleTimer = () => {
+    setTimerEnabled((prev) => {
+      const next = !prev;
+      if (!next) {
+        setTimerStart(null);
+        setElapsedMs(0);
+      }
+      return next;
+    });
   };
 
   useEffect(() => {
@@ -370,6 +382,8 @@ export default function App() {
               isValidating={isValidating || isCompleting}
               successMessage={successMessage}
               timerMs={elapsedMs}
+              timerEnabled={timerEnabled}
+              onToggleTimer={handleToggleTimer}
             />
           </motion.div>
         </div>
