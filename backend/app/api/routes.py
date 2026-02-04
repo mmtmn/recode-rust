@@ -151,7 +151,7 @@ def validate_challenge(
         raise HTTPException(status_code=404, detail="Challenge not found")
 
     challenge, lesson, language = context
-    errors = validate_code(language.slug, payload.code, challenge.solution_code)
+    errors = validate_code(language.slug, payload.code, challenge.solution_code, challenge.tests)
 
     return schemas.ValidationResult(is_valid=len(errors) == 0, errors=errors)
 
@@ -167,7 +167,7 @@ def submit_challenge(
         raise HTTPException(status_code=404, detail="Challenge not found")
 
     challenge, lesson, language = context
-    errors = validate_code(language.slug, payload.code, challenge.solution_code)
+    errors = validate_code(language.slug, payload.code, challenge.solution_code, challenge.tests)
     is_valid = len(errors) == 0
     user = progress_repo.get_or_create_user(session)
     best, new_best = record_attempt(session, user, lesson.id, payload.duration_ms, is_valid)

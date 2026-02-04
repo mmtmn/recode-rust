@@ -249,10 +249,10 @@ export default function App() {
   };
 
   const handleValidate = async () => {
-    if (!activeChallenge || !lessonDetail || timerStart === null) return;
+    if (!activeChallenge || !lessonDetail) return;
     setIsValidating(true);
     try {
-      const durationMs = Math.max(1, Math.floor(performance.now() - timerStart));
+      const durationMs = timerStart === null ? 0 : Math.max(1, Math.floor(performance.now() - timerStart));
       const result = await api.validateChallenge(activeChallenge.id, code, durationMs);
       setValidation(result);
       if (result.new_best) {

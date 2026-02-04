@@ -13,7 +13,7 @@ def test_validate_challenge_success(client):
 
     response = client.post(
         f"/api/challenges/{challenge_id}/submit",
-        json={"code": "print('hi')", "duration_ms": 1200},
+        json={\"code\": \"print('Hello, Recode!')\", \"duration_ms\": 1200},
     )
     assert response.status_code == 200
     assert response.json()["is_valid"] is True
