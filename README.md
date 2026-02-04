@@ -6,6 +6,7 @@ Developer-first syntax drills with instant feedback, playlists, and a focused ed
 - Backend: FastAPI + SQLModel + SQLite
 - Frontend: React + Vite + Tailwind + Framer Motion
 - Tests: Pytest (unit/integration), Vitest (frontend unit), Playwright (e2e)
+- Validation: Executes user code against expected outputs per language (no sandbox)
 
 ## Project Layout
 - `backend/`: API, domain, services, repositories, seed data
@@ -16,6 +17,16 @@ Developer-first syntax drills with instant feedback, playlists, and a focused ed
 - Python 3.11+
 - Node.js 18+
 - npm 9+
+- Language runtimes for validation (install what you want to practice):
+  - Python (uses current interpreter)
+  - JavaScript (Node.js)
+  - TypeScript (`ts-node` or `tsc` + Node.js)
+  - Java (`javac` + `java`)
+  - C++ (`g++`)
+  - C# (`dotnet` SDK or `csc` + runtime)
+  - Go (`go`)
+  - Rust (`rustc`)
+  - SQL (`sqlite3` CLI)
 
 ## Setup and Run Locally
 
@@ -85,5 +96,9 @@ npm run test
 
 ## Notes
 - Data is seeded automatically on backend startup.
-- Syntax validation is lightweight by default (Python compilation + bracket checks); swap in real parsers as needed.
+- Validation runs code using local runtimes and compares output to lesson expectations.
 - To refresh lesson content after seed changes, delete `backend/app.db` and restart the backend.
+- To reset timing stats (attempts + best scores):
+  ```bash
+  sqlite3 backend/app.db "DELETE FROM attempt; DELETE FROM bestscore;"
+  ```
