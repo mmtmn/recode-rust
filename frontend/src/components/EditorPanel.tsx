@@ -54,8 +54,8 @@ export default function EditorPanel({
 
       {challenge ? (
         <div className="mt-4 space-y-4">
-          <div>
-            <div className="flex flex-wrap items-center justify-between gap-4">
+          <div className="space-y-3">
+            <div className="grid items-center gap-4 md:grid-cols-[1fr_auto]">
               <div className="flex items-center gap-3">
                 <label className="text-xs uppercase tracking-[0.2em] text-white/40">Code</label>
                 <select
@@ -70,10 +70,12 @@ export default function EditorPanel({
                   ))}
                 </select>
               </div>
-              <TimerDisplay elapsedMs={timerMs} />
+              <div className="justify-self-start md:justify-self-end">
+                <TimerDisplay elapsedMs={timerMs} />
+              </div>
             </div>
             <textarea
-              className="mt-2 h-56 w-full rounded-2xl border border-white/10 bg-ink/80 p-4 font-mono text-sm text-white/90 outline-none transition focus:border-ember/50"
+              className="h-56 w-full rounded-2xl border border-white/10 bg-ink/80 p-4 font-mono text-sm text-white/90 outline-none transition focus:border-ember/50"
               value={code}
               onChange={(event) => onCodeChange(event.target.value)}
               style={{ resize: "none" }}
