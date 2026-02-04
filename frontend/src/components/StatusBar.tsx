@@ -14,7 +14,9 @@ export default function StatusBar({ progress, onOpenStats, onOpenAchievements }:
   return (
     <div className="flex flex-wrap items-center justify-between gap-6">
       <div>
-        <h1 className="font-display text-3xl text-white">RECODE</h1>
+        <h1 className="glitch-logo font-display text-3xl text-white" data-text="RECODE">
+          RECODE
+        </h1>
       </div>
       <div className="flex flex-wrap items-center gap-4 text-sm text-white/70">
         <div className="flex flex-col gap-2">
