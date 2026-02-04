@@ -187,7 +187,7 @@ SOLUTION_SNIPPETS = {
         "javascript": "for (let i = 1; i <= 5; i++) {\n  if (i % 2 === 0) {\n    console.log(i);\n  }\n}",
         "typescript": "for (let i = 1; i <= 5; i++) {\n  if (i % 2 === 0) {\n    console.log(i);\n  }\n}",
         "java": "public class Main {\n  public static void main(String[] args) {\n    for (int i = 1; i <= 5; i++) {\n      if (i % 2 == 0) {\n        System.out.println(i);\n      }\n    }\n  }\n}",
-        "cpp": "#include <iostream>\n\nint main() {\n  for (int i = 1; i <= 5; i++) {\n    if (i % 2 == 0) {\n      std::cout << i << "\n";\n    }\n  }\n  return 0;\n}",
+        "cpp": "#include <iostream>\n\nint main() {\n  for (int i = 1; i <= 5; i++) {\n    if (i % 2 == 0) {\n      std::cout << i << \"\\n\";\n    }\n  }\n  return 0;\n}",
         "csharp": "using System;\n\nclass Program {\n  static void Main() {\n    for (int i = 1; i <= 5; i++) {\n      if (i % 2 == 0) {\n        Console.WriteLine(i);\n      }\n    }\n  }\n}",
         "go": "package main\n\nimport \"fmt\"\n\nfunc main() {\n  for i := 1; i <= 5; i++ {\n    if i%2 == 0 {\n      fmt.Println(i)\n    }\n  }\n}",
         "rust": "fn main() {\n    for i in 1..=5 {\n        if i % 2 == 0 {\n            println!(\"{}\", i);\n        }\n    }\n}",
