@@ -354,10 +354,6 @@ export default function App() {
         />
 
         <div className="space-y-6">
-          <div className="flex items-center gap-4">
-            <TimerDisplay elapsedMs={elapsedMs} />
-          </div>
-
           <motion.div variants={fadeIn} initial="hidden" animate="show">
             <EditorPanel
               challenge={activeChallenge}
@@ -373,6 +369,7 @@ export default function App() {
               validation={validation}
               isValidating={isValidating || isCompleting}
               successMessage={successMessage}
+              timerMs={elapsedMs}
             />
           </motion.div>
         </div>

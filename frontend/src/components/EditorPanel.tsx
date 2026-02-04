@@ -1,6 +1,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 
 import type { Challenge, Language, ValidationResult } from "../lib/api";
+import TimerDisplay from "./TimerDisplay";
 
 type Props = {
   challenge: Challenge | null;
@@ -9,6 +10,7 @@ type Props = {
   languageName?: string | null;
   languageSlug?: string | null;
   languages: Language[];
+  timerMs: number;
   code: string;
   onCodeChange: (value: string) => void;
   onValidate: () => void;
@@ -25,6 +27,7 @@ export default function EditorPanel({
   languageName,
   languageSlug,
   languages,
+  timerMs,
   code,
   onCodeChange,
   onValidate,
@@ -65,6 +68,9 @@ export default function EditorPanel({
                   </option>
                 ))}
               </select>
+            </div>
+            <div className="mt-3">
+              <TimerDisplay elapsedMs={timerMs} />
             </div>
             <textarea
               className="mt-2 h-56 w-full rounded-2xl border border-white/10 bg-ink/80 p-4 font-mono text-sm text-white/90 outline-none transition focus:border-ember/50"
