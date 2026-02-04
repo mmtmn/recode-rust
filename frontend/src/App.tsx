@@ -141,9 +141,10 @@ export default function App() {
         setLessonDetail(detail);
         const challenge = detail.challenges[0];
         const prompt = challenge?.prompt ?? "";
+        const languageSlug = selectedItem?.languageSlug ?? selectedSlug;
         const commentPrefix = (() => {
-          if (selectedSlug === "python") return "# ";
-          if (selectedSlug === "sql") return "-- ";
+          if (languageSlug === "python") return "# ";
+          if (languageSlug === "sql") return "-- ";
           return "// ";
         })();
         const instruction = prompt ? `${commentPrefix}${prompt}` : "";
@@ -157,7 +158,7 @@ export default function App() {
     return () => {
       isActive = false;
     };
-  }, [selectedLessonId]);
+  }, [selectedLessonId, selectedItem?.languageSlug, selectedSlug]);
 
   useEffect(() => {
     if (selectedItem) {
