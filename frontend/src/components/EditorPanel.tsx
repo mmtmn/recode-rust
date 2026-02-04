@@ -6,6 +6,7 @@ type Props = {
   challenge: Challenge | null;
   lessonTitle?: string | null;
   lessonSummary?: string | null;
+  languageName?: string | null;
   code: string;
   onCodeChange: (value: string) => void;
   onValidate: () => void;
@@ -18,6 +19,7 @@ export default function EditorPanel({
   challenge,
   lessonTitle,
   lessonSummary,
+  languageName,
   code,
   onCodeChange,
   onValidate,
@@ -29,15 +31,15 @@ export default function EditorPanel({
   const showError = Boolean(validation && !validation.is_valid);
 
   return (
-    <div className={`relative overflow-hidden rounded-3xl border border-white/10 bg-white/5 p-6 ${
-      showSuccess ? "border-moss/60 shadow-glow" : ""
-    }`}>
+    <div
+      className={`relative overflow-hidden rounded-3xl border border-white/10 bg-white/5 p-6 ${
+        showSuccess ? "border-moss/60 shadow-glow" : ""
+      }`}
+    >
       <div className="flex items-center justify-between">
         <div>
           <p className="text-xs uppercase tracking-[0.3em] text-white/50">Editor</p>
-          <h3 className="font-display text-2xl text-white">
-            {lessonTitle ?? "Select a lesson"}
-          </h3>
+          <h3 className="font-display text-2xl text-white">{lessonTitle ?? "Select a lesson"}</h3>
         </div>
         <div className="rounded-full border border-white/20 px-3 py-1 text-xs text-white/70">Recode Studio</div>
       </div>
@@ -62,7 +64,16 @@ export default function EditorPanel({
           </div>
 
           <div>
-            <label className="text-xs uppercase tracking-[0.2em] text-white/40">Code</label>
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <label className="text-xs uppercase tracking-[0.2em] text-white/40">Code</label>
+              <select
+                className="rounded-full border border-white/20 bg-ink/80 px-3 py-1 text-xs text-white/70"
+                value={languageName ?? ""}
+                disabled
+              >
+                <option value={languageName ?? ""}>{languageName ?? "Language"}</option>
+              </select>
+            </div>
             <textarea
               className="mt-2 h-56 w-full rounded-2xl border border-white/10 bg-ink/80 p-4 font-mono text-sm text-white/90 outline-none transition focus:border-ember/50"
               value={code}
@@ -122,9 +133,7 @@ export default function EditorPanel({
               <pre className="mt-2 whitespace-pre-wrap rounded-xl bg-ink/80 p-3 font-mono text-xs text-white/80">
                 {challenge.solution_code}
               </pre>
-              <p className="mt-2 text-xs text-white/60">
-                Compare this reference with your attempt and try again.
-              </p>
+              <p className="mt-2 text-xs text-white/60">Compare this reference with your attempt and try again.</p>
             </div>
           ) : null}
         </div>

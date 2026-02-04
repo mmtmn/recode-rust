@@ -251,8 +251,6 @@ export default function App() {
       <main className="mx-auto grid max-w-6xl gap-6 px-6 pb-12 pt-10 lg:grid-cols-[320px_1fr]">
         <Sidebar
           languages={languages}
-          selectedSlug={selectedSlug}
-          onSelectSlug={setSelectedSlug}
           playlist={playlist}
           selectedItemId={selectedItem?.id ?? null}
           onSelectItem={handleSelectItem}
@@ -269,6 +267,7 @@ export default function App() {
               challenge={activeChallenge}
               lessonTitle={lessonDetail?.title}
               lessonSummary={lessonDetail?.summary}
+              languageName={selectedItem?.languageName ?? null}
               code={code}
               onCodeChange={setCode}
               onValidate={handleValidate}

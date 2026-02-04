@@ -14,8 +14,6 @@ type PlaylistItem = {
 
 type Props = {
   languages: Language[];
-  selectedSlug: string;
-  onSelectSlug: (slug: string) => void;
   playlist: PlaylistItem[];
   selectedItemId: string | null;
   onSelectItem: (itemId: string) => void;
@@ -28,8 +26,6 @@ type Props = {
 
 export default function Sidebar({
   languages,
-  selectedSlug,
-  onSelectSlug,
   playlist,
   selectedItemId,
   onSelectItem,
@@ -82,28 +78,6 @@ export default function Sidebar({
             ))}
           </div>
         ) : null}
-      </div>
-
-      <div>
-        <p className="text-xs uppercase tracking-[0.3em] text-white/50">Language</p>
-        <div className="mt-3 flex flex-wrap gap-2">
-          {languages.map((language) => (
-            <button
-              key={language.id}
-              className={`rounded-full border px-3 py-1 text-xs transition ${
-                selectedSlug === language.slug
-                  ? "border-ember/60 bg-ember/10 text-white"
-                  : "border-white/20 text-white/70 hover:border-white/50"
-              }`}
-              onClick={() => onSelectSlug(language.slug)}
-            >
-              {language.name}
-            </button>
-          ))}
-          {!isLoading && languages.length === 0 ? (
-            <span className="text-xs text-white/60">No languages loaded.</span>
-          ) : null}
-        </div>
       </div>
 
       <div>
