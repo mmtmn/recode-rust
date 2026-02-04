@@ -182,33 +182,6 @@ export default function App() {
           <section className="rounded-3xl border border-white/10 bg-white/5 p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs uppercase tracking-[0.3em] text-white/50">Developer Practices</p>
-                <h3 className="font-display text-2xl text-white">Clean architecture by default</h3>
-              </div>
-            </div>
-            <div className="mt-4 flex flex-wrap gap-2 text-xs text-white/70">
-              {[
-                "SOLID",
-                "Clean Architecture",
-                "DRY",
-                "TDD",
-                "Unit Tests",
-                "Integration Tests",
-                "E2E Tests"
-              ].map((badge) => (
-                <span key={badge} className="rounded-full border border-white/20 px-3 py-1">
-                  {badge}
-                </span>
-              ))}
-            </div>
-            <p className="mt-3 text-sm text-white/60">
-              Recode is built with layered services, strict separation of concerns, and test coverage across the stack.
-            </p>
-          </section>
-
-          <section className="rounded-3xl border border-white/10 bg-white/5 p-6">
-            <div className="flex items-center justify-between">
-              <div>
                 <p className="text-xs uppercase tracking-[0.3em] text-white/50">Achievements</p>
                 <h3 className="font-display text-2xl text-white">Recent milestones</h3>
               </div>

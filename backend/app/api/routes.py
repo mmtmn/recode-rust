@@ -150,6 +150,6 @@ def validate_challenge(
         raise HTTPException(status_code=404, detail="Challenge not found")
 
     challenge, lesson, language = context
-    errors = validate_code(language.slug, payload.code)
+    errors = validate_code(language.slug, payload.code, challenge.solution_code)
 
     return schemas.ValidationResult(is_valid=len(errors) == 0, errors=errors)

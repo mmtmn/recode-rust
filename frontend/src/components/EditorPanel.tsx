@@ -67,6 +67,19 @@ export default function EditorPanel({
               className="mt-2 h-56 w-full rounded-2xl border border-white/10 bg-ink/80 p-4 font-mono text-sm text-white/90 outline-none transition focus:border-ember/50"
               value={code}
               onChange={(event) => onCodeChange(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === "Tab") {
+                  event.preventDefault();
+                  const target = event.currentTarget;
+                  const start = target.selectionStart ?? 0;
+                  const end = target.selectionEnd ?? 0;
+                  const updated = `${code.slice(0, start)}  ${code.slice(end)}`;
+                  onCodeChange(updated);
+                  window.requestAnimationFrame(() => {
+                    target.selectionStart = target.selectionEnd = start + 2;
+                  });
+                }
+              }}
             />
           </div>
 

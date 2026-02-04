@@ -1,3 +1,4 @@
+import re
 from typing import List, Tuple
 
 
@@ -35,16 +36,58 @@ def _check_python_syntax(code: str) -> List[str]:
     return []
 
 
-def validate_code(language_slug: str, code: str) -> List[str]:
+def _extract_expected_tokens(solution_code: str) -> List[str]:
+    string_literals = re.findall(r"\"([^\"]+)\"|'([^']+)'", solution_code)
+    strings = [value for pair in string_literals for value in pair if value]
+    numbers = re.findall(r"\b\d+\b", solution_code)
+    booleans = []
+    if "true" in solution_code.lower():
+        booleans.append("true")
+    if "false" in solution_code.lower():
+        booleans.append("false")
+    return [*strings, *numbers, *booleans]
+
+
+def _check_expected_tokens(code: str, tokens: List[str]) -> List[str]:
+    missing = []
+    lower_code = code.lower()
+    for token in tokens:
+        if token.isdigit():
+            if re.search(rf"\b{re.escape(token)}\b", code) is None:
+                missing.append(token)
+        elif token in ["true", "false"]:
+            if token not in lower_code:
+                missing.append(token)
+        else:
+            if token not in code:
+                missing.append(token)
+    if missing:
+        return [f"Missing expected value(s): {', '.join(missing)}."]
+    return []
+
+
+def validate_code(language_slug: str, code: str, solution_code: str) -> List[str]:
     if not code.strip():
         return ["Code is empty."]
 
+    expected_tokens = _extract_expected_tokens(solution_code)
+
     if language_slug == "python":
-        return _check_python_syntax(code)
+        syntax_errors = _check_python_syntax(code)
+        if syntax_errors:
+            return syntax_errors
+        token_errors = _check_expected_tokens(code, expected_tokens)
+        if token_errors:
+            return token_errors
+        return []
 
     errors = _check_balanced_pairs(code)
     if errors:
         return errors
+
+    token_errors = _check_expected_tokens(code, expected_tokens)
+    if token_errors:
+        return token_errors
 
     if language_slug == "sql":
         upper = code.upper()
