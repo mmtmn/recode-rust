@@ -55,6 +55,7 @@ export default function App() {
   const [selectedSlugs, setSelectedSlugs] = useState<string[]>([]);
   const [elapsedMs, setElapsedMs] = useState(0);
   const [timerStart, setTimerStart] = useState<number | null>(null);
+  const [initialCode, setInitialCode] = useState("");
   const [showAchievements, setShowAchievements] = useState(false);
   const [showStats, setShowStats] = useState(false);
   const [statsMode, setStatsMode] = useState<"history" | "best">("history");
@@ -172,10 +173,10 @@ export default function App() {
         const starter = challenge?.starter_code ?? "";
         const combined = instruction ? `${instruction}\n\n${starter}`.trimEnd() + "\n" : starter;
         setCode(combined);
+        setInitialCode(combined);
         setValidation(null);
         setSuccessMessage(null);
-        const start = performance.now();
-        setTimerStart(start);
+        setTimerStart(null);
         setElapsedMs(0);
       }
     });
@@ -197,6 +198,13 @@ export default function App() {
     }, 50);
     return () => window.clearInterval(interval);
   }, [timerStart]);
+
+  const handleCodeChange = (value: string) => {
+    if (timerStart === null && value !== initialCode) {
+      setTimerStart(performance.now());
+    }
+    setCode(value);
+  };
 
   useEffect(() => {
     if (!showStats) return;
@@ -359,7 +367,7 @@ export default function App() {
               languageSlug={selectedItem?.languageSlug ?? null}
               languages={languages}
               code={code}
-              onCodeChange={setCode}
+              onCodeChange={handleCodeChange}
               onValidate={handleValidate}
               onLanguageChange={handleLanguageChange}
               validation={validation}
