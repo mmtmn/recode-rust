@@ -1,20 +1,72 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
+import '../controllers/home_controller.dart';
 import '../models/models.dart';
 import '../models/stats.dart';
 import '../theme/app_theme.dart';
 import '../utils/time_utils.dart';
 
-class StatsSheet extends StatelessWidget {
+class StatsSheet extends StatefulWidget {
   const StatsSheet({
     super.key,
-    required this.statsFuture,
+    required this.controller,
   });
 
-  final Future<StatsData> statsFuture;
+  final HomeController controller;
+
+  @override
+  State<StatsSheet> createState() => _StatsSheetState();
+}
+
+class _StatsSheetState extends State<StatsSheet> {
+  late Future<StatsData> _statsFuture;
+  List<String> _lastSlugs = const [];
+
+  @override
+  void initState() {
+    super.initState();
+    _statsFuture = widget.controller.loadStats();
+    _lastSlugs = List<String>.from(widget.controller.state.selectedSlugs);
+    widget.controller.addListener(_handleControllerChange);
+  }
+
+  @override
+  void dispose() {
+    widget.controller.removeListener(_handleControllerChange);
+    super.dispose();
+  }
+
+  void _handleControllerChange() {
+    final slugs = widget.controller.state.selectedSlugs;
+    if (!listEquals(slugs, _lastSlugs)) {
+      _lastSlugs = List<String>.from(slugs);
+      setState(() {
+        _statsFuture = widget.controller.loadStats();
+      });
+    }
+  }
+
+  void _toggleLanguage(String slug) {
+    widget.controller.toggleLanguage(slug);
+  }
+
+  void _selectAll() {
+    widget.controller.selectAllLanguages();
+  }
+
+  List<String> _activeSlugs(List<Language> languages, List<String> selected) {
+    if (selected.isNotEmpty) return selected;
+    return languages.map((lang) => lang.slug).toList();
+  }
 
   @override
   Widget build(BuildContext context) {
+    final state = widget.controller.state;
+    final languages = state.languages;
+    final selectedSlugs = state.selectedSlugs;
+    final activeSlugs = _activeSlugs(languages, selectedSlugs);
+
     return DraggableScrollableSheet(
       expand: false,
       initialChildSize: 0.85,
@@ -28,7 +80,7 @@ class StatsSheet extends StatelessWidget {
             border: Border.all(color: Colors.white.withOpacity(0.08)),
           ),
           child: FutureBuilder<StatsData>(
-            future: statsFuture,
+            future: _statsFuture,
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return const Center(child: CircularProgressIndicator());
@@ -42,6 +94,13 @@ class StatsSheet extends StatelessWidget {
                 );
               }
               final data = snapshot.data!;
+              final filteredAttempts = data.attempts
+                  .where((attempt) => activeSlugs.contains(attempt.languageSlug))
+                  .toList();
+              final filteredBest = data.bestScores
+                  .where((score) => activeSlugs.contains(score.languageSlug))
+                  .toList();
+
               return DefaultTabController(
                 length: 2,
                 child: Column(
@@ -66,12 +125,50 @@ class StatsSheet extends StatelessWidget {
                       labelColor: Colors.white,
                       indicatorColor: AppColors.ember,
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 12),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: [
+                          OutlinedButton(
+                            onPressed: _selectAll,
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: Colors.white70,
+                              side: BorderSide(color: Colors.white.withOpacity(0.2)),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
+                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                            ),
+                            child: const Text('All languages'),
+                          ),
+                          ...languages.map((language) {
+                            final isSelected = activeSlugs.contains(language.slug);
+                            return FilterChip(
+                              selected: isSelected,
+                              label: Text(language.name),
+                              onSelected: (_) => _toggleLanguage(language.slug),
+                              selectedColor: AppColors.moss.withOpacity(0.25),
+                              checkmarkColor: Colors.white,
+                              side: BorderSide(
+                                color: isSelected
+                                    ? AppColors.moss.withOpacity(0.6)
+                                    : Colors.white.withOpacity(0.2),
+                              ),
+                              labelStyle: Theme.of(context).textTheme.labelMedium?.copyWith(
+                                    color: isSelected ? Colors.white : Colors.white70,
+                                  ),
+                            );
+                          }),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 12),
                     Expanded(
                       child: TabBarView(
                         children: [
-                          _AttemptsList(attempts: data.attempts, controller: controller),
-                          _BestList(bestScores: data.bestScores, controller: controller),
+                          _AttemptsList(attempts: filteredAttempts, controller: controller),
+                          _BestList(bestScores: filteredBest, controller: controller),
                         ],
                       ),
                     ),

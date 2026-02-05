@@ -287,6 +287,21 @@ class HomeController extends ChangeNotifier {
     }
   }
 
+  void selectAllLanguages() {
+    final slugs = _state.languages.map((lang) => lang.slug).toList();
+    if (slugs.isEmpty) return;
+    final selectedSlug = slugs.contains(_state.selectedSlug) ? _state.selectedSlug : slugs.first;
+    _setState(
+      _state.copyWith(
+        selectedSlugs: slugs,
+        selectedSlug: selectedSlug,
+        languageGlitchKey: _state.languageGlitchKey + 1,
+      ),
+    );
+    _persistPreferences();
+    _ensureSelection();
+  }
+
   int? _getFirstLessonIdForSlug(String slug) {
     final detail = _state.languageMap[slug];
     if (detail == null || detail.lessons.isEmpty) return null;

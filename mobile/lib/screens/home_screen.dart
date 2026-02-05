@@ -21,11 +21,18 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMixin {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   late final TextEditingController _codeController;
   late HomeController _controller;
   bool _isSyncingCode = false;
+  late final AnimationController _pageController;
+  late final Animation<double> _headerOpacity;
+  late final Animation<Offset> _headerSlide;
+  late final Animation<double> _sidebarOpacity;
+  late final Animation<Offset> _sidebarSlide;
+  late final Animation<double> _editorOpacity;
+  late final Animation<Offset> _editorSlide;
 
   @override
   void initState() {
@@ -34,12 +41,49 @@ class _HomeScreenState extends State<HomeScreen> {
     _codeController = TextEditingController(text: _controller.state.code);
     _controller.addListener(_onControllerChanged);
     _controller.initialize();
+
+    _pageController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 900),
+    );
+    _headerOpacity = CurvedAnimation(
+      parent: _pageController,
+      curve: const Interval(0.0, 0.35, curve: Curves.easeOut),
+    );
+    _headerSlide = Tween<Offset>(
+      begin: const Offset(0, 0.08),
+      end: Offset.zero,
+    ).animate(
+      CurvedAnimation(parent: _pageController, curve: const Interval(0.0, 0.35, curve: Curves.easeOut)),
+    );
+    _sidebarOpacity = CurvedAnimation(
+      parent: _pageController,
+      curve: const Interval(0.2, 0.6, curve: Curves.easeOut),
+    );
+    _sidebarSlide = Tween<Offset>(
+      begin: const Offset(0, 0.08),
+      end: Offset.zero,
+    ).animate(
+      CurvedAnimation(parent: _pageController, curve: const Interval(0.2, 0.6, curve: Curves.easeOut)),
+    );
+    _editorOpacity = CurvedAnimation(
+      parent: _pageController,
+      curve: const Interval(0.35, 0.85, curve: Curves.easeOut),
+    );
+    _editorSlide = Tween<Offset>(
+      begin: const Offset(0, 0.06),
+      end: Offset.zero,
+    ).animate(
+      CurvedAnimation(parent: _pageController, curve: const Interval(0.35, 0.85, curve: Curves.easeOut)),
+    );
+    _pageController.forward();
   }
 
   @override
   void dispose() {
     _controller.removeListener(_onControllerChanged);
     _codeController.dispose();
+    _pageController.dispose();
     super.dispose();
   }
 
@@ -69,7 +113,7 @@ class _HomeScreenState extends State<HomeScreen> {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => StatsSheet(statsFuture: _controller.loadStats()),
+      builder: (_) => StatsSheet(controller: _controller),
     );
   }
 
@@ -91,6 +135,17 @@ class _HomeScreenState extends State<HomeScreen> {
         final isWide = constraints.maxWidth >= 900;
         final playlist = _controller.playlist;
         final selectedItem = _controller.selectedItem;
+
+        Widget stagger({
+          required Animation<double> opacity,
+          required Animation<Offset> slide,
+          required Widget child,
+        }) {
+          return FadeTransition(
+            opacity: opacity,
+            child: SlideTransition(position: slide, child: child),
+          );
+        }
 
         EditorPanel buildEditor({required bool isFullscreen}) {
           return EditorPanel(
@@ -155,15 +210,19 @@ class _HomeScreenState extends State<HomeScreen> {
                   padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
                   child: Column(
                     children: [
-                      StatusBar(
-                        progress: state.progress,
-                        onOpenStats: _openStats,
-                        onOpenAchievements: _openAchievements,
-                        onOpenMenu: isWide
-                            ? null
-                            : () {
-                                _scaffoldKey.currentState?.openDrawer();
-                              },
+                      stagger(
+                        opacity: _headerOpacity,
+                        slide: _headerSlide,
+                        child: StatusBar(
+                          progress: state.progress,
+                          onOpenStats: _openStats,
+                          onOpenAchievements: _openAchievements,
+                          onOpenMenu: isWide
+                              ? null
+                              : () {
+                                  _scaffoldKey.currentState?.openDrawer();
+                                },
+                        ),
                       ),
                       const SizedBox(height: 20),
                       Expanded(
@@ -186,27 +245,41 @@ class _HomeScreenState extends State<HomeScreen> {
                                   key: ValueKey('wide-${state.selectedLessonId}'),
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    SizedBox(
-                                      width: 320,
-                                      child: PlaylistSidebar(
-                                        languages: state.languages,
-                                        playlist: playlist,
-                                        selectedItemId: selectedItem?.id,
-                                        onSelectItem: _controller.selectPlaylistItem,
-                                        isLoading: state.isLoading,
-                                        playlistMode: state.playlistMode,
-                                        selectedSlugs: state.selectedSlugs,
-                                        onToggleLanguage: _controller.toggleLanguage,
-                                        onChangeMode: _controller.changeMode,
+                                    stagger(
+                                      opacity: _sidebarOpacity,
+                                      slide: _sidebarSlide,
+                                      child: SizedBox(
+                                        width: 320,
+                                        child: PlaylistSidebar(
+                                          languages: state.languages,
+                                          playlist: playlist,
+                                          selectedItemId: selectedItem?.id,
+                                          onSelectItem: _controller.selectPlaylistItem,
+                                          isLoading: state.isLoading,
+                                          playlistMode: state.playlistMode,
+                                          selectedSlugs: state.selectedSlugs,
+                                          onToggleLanguage: _controller.toggleLanguage,
+                                          onChangeMode: _controller.changeMode,
+                                        ),
                                       ),
                                     ),
                                     const SizedBox(width: 20),
-                                    Expanded(child: editorPanel),
+                                    Expanded(
+                                      child: stagger(
+                                        opacity: _editorOpacity,
+                                        slide: _editorSlide,
+                                        child: editorPanel,
+                                      ),
+                                    ),
                                   ],
                                 )
                               : Container(
                                   key: ValueKey('narrow-${state.selectedLessonId}'),
-                                  child: editorPanel,
+                                  child: stagger(
+                                    opacity: _editorOpacity,
+                                    slide: _editorSlide,
+                                    child: editorPanel,
+                                  ),
                                 ),
                         ),
                       ),
