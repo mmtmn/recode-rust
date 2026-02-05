@@ -3,6 +3,9 @@ from sqlmodel import Session, select
 from app.domain.models import Achievement, Challenge, Language, Lesson, UserProfile
 
 
+BASE_XP = 40
+XP_STEP = 5
+
 LANGUAGES = [
     {
         "name": "Python",
@@ -238,6 +241,76 @@ EXERCISE_TESTS = {
     "p14a": "Expected output: 12",
     "p14b": "Expected output: 2",
 }
+
+
+def _seed_plan_for_order(order_index: int):
+    if order_index < 1:
+        return None
+    phase_index = (order_index - 1) // 2
+    if phase_index >= len(PHASES):
+        return None
+    phase = PHASES[phase_index]
+    offset = (order_index - 1) % 2
+    exercise_id = phase["exercise_ids"][offset]
+    suffix = "A" if offset == 0 else "B"
+    phase_xp = BASE_XP + phase_index * XP_STEP
+    return phase, exercise_id, suffix, phase_xp
+
+
+def refresh_seed_content(session: Session) -> None:
+    languages = session.exec(select(Language)).all()
+    if not languages:
+        return
+
+    for language in languages:
+        lessons = session.exec(select(Lesson).where(Lesson.language_id == language.id)).all()
+        for lesson in lessons:
+            plan = _seed_plan_for_order(lesson.order_index)
+            if not plan:
+                continue
+            phase, exercise_id, suffix, phase_xp = plan
+            desired_title = f"{phase['title']} {suffix}"
+            if lesson.title != desired_title:
+                lesson.title = desired_title
+            if lesson.summary != phase["summary"]:
+                lesson.summary = phase["summary"]
+            if lesson.difficulty != "Beginner":
+                lesson.difficulty = "Beginner"
+            if lesson.xp != phase_xp:
+                lesson.xp = phase_xp
+
+            challenge = session.exec(select(Challenge).where(Challenge.lesson_id == lesson.id)).first()
+            prompt = EXERCISE_PROMPTS[exercise_id]
+            tests = EXERCISE_TESTS[exercise_id]
+            solution = solution_for(exercise_id, language.slug)
+            if challenge:
+                desired_challenge_title = f"{desired_title} Challenge"
+                if challenge.title != desired_challenge_title:
+                    challenge.title = desired_challenge_title
+                if challenge.prompt != prompt:
+                    challenge.prompt = prompt
+                if challenge.tests != tests:
+                    challenge.tests = tests
+                if challenge.solution_code != solution:
+                    challenge.solution_code = solution
+                if challenge.xp != lesson.xp:
+                    challenge.xp = lesson.xp
+                if challenge.starter_code is None:
+                    challenge.starter_code = ""
+            else:
+                session.add(
+                    Challenge(
+                        lesson_id=lesson.id,
+                        title=f"{desired_title} Challenge",
+                        prompt=prompt,
+                        starter_code="",
+                        solution_code=solution,
+                        tests=tests,
+                        xp=lesson.xp,
+                    )
+                )
+
+    session.commit()
 
 
 def _print_literal(language_slug: str, text: str) -> str:
@@ -2200,10 +2273,8 @@ def solution_for(exercise_id: str, language_slug: str) -> str:
 def seed_data(session: Session) -> None:
     existing_language = session.exec(select(Language).limit(1)).first()
     if existing_language:
+        refresh_seed_content(session)
         return
-
-    base_xp = 40
-    xp_step = 5
 
     for lang_data in LANGUAGES:
         language = Language(**lang_data)
@@ -2212,7 +2283,7 @@ def seed_data(session: Session) -> None:
 
         order_index = 1
         for phase_index, phase in enumerate(PHASES, start=1):
-            phase_xp = base_xp + (phase_index - 1) * xp_step
+            phase_xp = BASE_XP + (phase_index - 1) * XP_STEP
             for lesson_offset, exercise_id in enumerate(phase["exercise_ids"], start=1):
                 suffix = "A" if lesson_offset == 1 else "B"
                 lesson_title = f"{phase['title']} {suffix}"
