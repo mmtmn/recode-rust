@@ -57,6 +57,7 @@ export default function App() {
   const [timerStart, setTimerStart] = useState<number | null>(null);
   const [initialCode, setInitialCode] = useState("");
   const [timerEnabled, setTimerEnabled] = useState(false);
+  const [languageGlitchKey, setLanguageGlitchKey] = useState(0);
   const [showAchievements, setShowAchievements] = useState(false);
   const [showStats, setShowStats] = useState(false);
   const [statsMode, setStatsMode] = useState<"history" | "best">("history");
@@ -64,6 +65,7 @@ export default function App() {
   const [statsBest, setStatsBest] = useState<BestScoreRead[]>([]);
   const [showConfetti, setShowConfetti] = useState(false);
   const [bestToast, setBestToast] = useState<string | null>(null);
+  const [isEditorFullscreen, setIsEditorFullscreen] = useState(false);
 
   useEffect(() => {
     let isActive = true;
@@ -189,6 +191,7 @@ export default function App() {
   useEffect(() => {
     if (selectedItem) {
       setSelectedSlug(selectedItem.languageSlug);
+      setLanguageGlitchKey((prev) => prev + 1);
     }
   }, [selectedItem]);
 
@@ -199,6 +202,26 @@ export default function App() {
     }, 50);
     return () => window.clearInterval(interval);
   }, [timerStart]);
+
+  useEffect(() => {
+    if (!isEditorFullscreen) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [isEditorFullscreen]);
+
+  useEffect(() => {
+    if (!isEditorFullscreen) return;
+    const handleKeydown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setIsEditorFullscreen(false);
+      }
+    };
+    window.addEventListener("keydown", handleKeydown);
+    return () => window.removeEventListener("keydown", handleKeydown);
+  }, [isEditorFullscreen]);
 
   const handleCodeChange = (value: string) => {
     if (timerEnabled && timerStart === null && value !== initialCode) {
@@ -216,6 +239,10 @@ export default function App() {
       }
       return next;
     });
+  };
+
+  const handleToggleFullscreen = () => {
+    setIsEditorFullscreen((prev) => !prev);
   };
 
   useEffect(() => {
@@ -366,28 +393,57 @@ export default function App() {
         />
 
         <div className="space-y-6">
-          <motion.div variants={fadeIn} initial="hidden" animate="show">
-            <EditorPanel
-              challenge={activeChallenge}
-              lessonTitle={lessonDetail?.title}
-              lessonSummary={lessonDetail?.summary}
-              languageName={selectedItem?.languageName ?? null}
-              languageSlug={selectedItem?.languageSlug ?? null}
-              languages={languages}
-              code={code}
-              onCodeChange={handleCodeChange}
-              onValidate={handleValidate}
-              onLanguageChange={handleLanguageChange}
-              validation={validation}
-              isValidating={isValidating || isCompleting}
-              successMessage={successMessage}
-              timerMs={elapsedMs}
-              timerEnabled={timerEnabled}
-              onToggleTimer={handleToggleTimer}
-            />
-          </motion.div>
+          {!isEditorFullscreen ? (
+            <motion.div variants={fadeIn} initial="hidden" animate="show">
+              <EditorPanel
+                challenge={activeChallenge}
+                lessonTitle={lessonDetail?.title}
+                lessonSummary={lessonDetail?.summary}
+                languageName={selectedItem?.languageName ?? null}
+                languageSlug={selectedItem?.languageSlug ?? null}
+                languageGlitchKey={languageGlitchKey}
+                languages={languages}
+                code={code}
+                onCodeChange={handleCodeChange}
+                onValidate={handleValidate}
+                onLanguageChange={handleLanguageChange}
+                validation={validation}
+                isValidating={isValidating || isCompleting}
+                successMessage={successMessage}
+                timerMs={elapsedMs}
+                timerEnabled={timerEnabled}
+                onToggleTimer={handleToggleTimer}
+                isFullscreen={false}
+                onToggleFullscreen={handleToggleFullscreen}
+              />
+            </motion.div>
+          ) : null}
         </div>
       </main>
+
+      {isEditorFullscreen ? (
+        <EditorPanel
+          challenge={activeChallenge}
+          lessonTitle={lessonDetail?.title}
+          lessonSummary={lessonDetail?.summary}
+          languageName={selectedItem?.languageName ?? null}
+          languageSlug={selectedItem?.languageSlug ?? null}
+          languageGlitchKey={languageGlitchKey}
+          languages={languages}
+          code={code}
+          onCodeChange={handleCodeChange}
+          onValidate={handleValidate}
+          onLanguageChange={handleLanguageChange}
+          validation={validation}
+          isValidating={isValidating || isCompleting}
+          successMessage={successMessage}
+          timerMs={elapsedMs}
+          timerEnabled={timerEnabled}
+          onToggleTimer={handleToggleTimer}
+          isFullscreen
+          onToggleFullscreen={handleToggleFullscreen}
+        />
+      ) : null}
 
       {showAchievements ? (
         <div className="fixed inset-0 z-40 flex items-center justify-center bg-ink/80 px-6">

@@ -1,4 +1,5 @@
 import { AnimatePresence, motion } from "framer-motion";
+import { useEffect, useState } from "react";
 
 import type { Challenge, Language, ValidationResult } from "../lib/api";
 import TimerDisplay from "./TimerDisplay";
@@ -9,10 +10,13 @@ type Props = {
   lessonSummary?: string | null;
   languageName?: string | null;
   languageSlug?: string | null;
+  languageGlitchKey?: number;
   languages: Language[];
   timerMs: number;
   timerEnabled: boolean;
   onToggleTimer: () => void;
+  isFullscreen: boolean;
+  onToggleFullscreen: () => void;
   code: string;
   onCodeChange: (value: string) => void;
   onValidate: () => void;
@@ -28,10 +32,13 @@ export default function EditorPanel({
   lessonSummary,
   languageName,
   languageSlug,
+  languageGlitchKey,
   languages,
   timerMs,
   timerEnabled,
   onToggleTimer,
+  isFullscreen,
+  onToggleFullscreen,
   code,
   onCodeChange,
   onValidate,
@@ -42,29 +49,52 @@ export default function EditorPanel({
 }: Props) {
   const showSuccess = Boolean(validation?.is_valid);
   const showError = Boolean(validation && !validation.is_valid);
+  const [glitching, setGlitching] = useState(false);
+  const containerClasses = [
+    "flex flex-col border border-white/10",
+    showSuccess ? "border-moss/60 shadow-glow" : "",
+    isFullscreen
+      ? "fixed inset-0 z-[60] h-screen w-screen overflow-y-auto rounded-none bg-ink/95 p-8"
+      : "relative overflow-hidden rounded-3xl bg-white/5 p-6"
+  ]
+    .filter(Boolean)
+    .join(" ");
+  const editorHeightClass = isFullscreen ? "h-full min-h-[360px]" : "h-56";
+
+  useEffect(() => {
+    if (languageGlitchKey === undefined) return;
+    setGlitching(true);
+    const timer = window.setTimeout(() => setGlitching(false), 700);
+    return () => window.clearTimeout(timer);
+  }, [languageGlitchKey]);
 
   return (
-    <div
-      className={`relative overflow-hidden rounded-3xl border border-white/10 bg-white/5 p-6 ${
-        showSuccess ? "border-moss/60 shadow-glow" : ""
-      }`}
-    >
+    <div className={containerClasses}>
       <div className="grid items-center gap-6 md:grid-cols-[1fr_auto]">
         <div className="flex flex-wrap items-center gap-4">
           <div>
             <p className="text-xs uppercase tracking-[0.3em] text-white/50">Task</p>
             <h3 className="font-display text-2xl text-white">{lessonTitle ?? "Select a lesson"}</h3>
-            <select
-              className="mt-2 w-fit rounded-full border border-white/20 bg-ink/80 px-3 py-1 text-xs text-white/70"
-              value={languageSlug ?? ""}
-              onChange={(event) => onLanguageChange(event.target.value)}
+            <div
+              className={`glitch-select mt-2 inline-flex w-fit items-center rounded-full border border-white/20 bg-ink/80 px-1 py-0.5 text-xs text-white/70 ${
+                glitching ? "glitching" : ""
+              }`}
+              data-text={languageName ?? ""}
             >
-              {languages.map((language) => (
-                <option key={language.slug} value={language.slug}>
-                  {language.name}
-                </option>
-              ))}
-            </select>
+              <select
+                className={`bg-transparent px-2 py-1 text-xs text-white/70 outline-none ${
+                  glitching ? "glitching-text" : ""
+                }`}
+                value={languageSlug ?? ""}
+                onChange={(event) => onLanguageChange(event.target.value)}
+              >
+                {languages.map((language) => (
+                  <option key={language.slug} value={language.slug}>
+                    {language.name}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
           <div className="flex items-center gap-3">
             <TimerDisplay
@@ -75,14 +105,23 @@ export default function EditorPanel({
             />
           </div>
         </div>
-        <div />
+        <div className="flex justify-end">
+          <button
+            className="rounded-full border border-white/20 px-3 py-1 text-xs text-white/70 transition hover:border-white/50"
+            onClick={onToggleFullscreen}
+            type="button"
+            aria-pressed={isFullscreen}
+          >
+            {isFullscreen ? "Exit full screen" : "Full screen"}
+          </button>
+        </div>
       </div>
 
       {challenge ? (
-        <div className="mt-3 space-y-3">
-          <div className="space-y-2">
+        <div className="mt-3 flex flex-1 flex-col gap-3">
+          <div className="flex-1 min-h-0">
             <textarea
-              className="h-56 w-full rounded-2xl border border-white/10 bg-ink/80 p-4 font-mono text-sm text-white/90 outline-none transition focus:border-ember/50"
+              className={`${editorHeightClass} w-full rounded-2xl border border-white/10 bg-ink/80 p-4 font-mono text-sm text-white/90 outline-none transition focus:border-ember/50`}
               value={code}
               onChange={(event) => onCodeChange(event.target.value)}
               style={{ resize: "none" }}
@@ -159,7 +198,9 @@ export default function EditorPanel({
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
-            className="pointer-events-none absolute inset-0 rounded-3xl border border-moss/50 bg-moss/10"
+            className={`pointer-events-none absolute inset-0 border border-moss/50 bg-moss/10 ${
+              isFullscreen ? "rounded-none" : "rounded-3xl"
+            }`}
           >
             <motion.div
               initial={{ scale: 0.8, opacity: 0 }}
