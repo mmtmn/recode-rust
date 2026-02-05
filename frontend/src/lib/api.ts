@@ -46,6 +46,12 @@ export type Progress = {
   completed_lessons: number;
 };
 
+export type LanguagePreferences = {
+  playlist_mode: "all" | "multi";
+  selected_slugs: string[];
+  selected_slug?: string | null;
+};
+
 export type CompletionResponse = {
   progress: Progress;
   new_achievements: Achievement[];
@@ -93,6 +99,13 @@ export const api = {
   getLesson: (lessonId: number) => fetchJson<LessonDetail>(`/api/lessons/${lessonId}`),
   listAchievements: () => fetchJson<Achievement[]>("/api/achievements"),
   getProgress: () => fetchJson<Progress>("/api/progress"),
+  getLanguagePreferences: () => fetchJson<LanguagePreferences>("/api/preferences/languages"),
+  setLanguagePreferences: (prefs: LanguagePreferences) =>
+    fetchJson<LanguagePreferences>("/api/preferences/languages", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(prefs)
+    }),
   completeLesson: (lessonId: number) =>
     fetchJson<CompletionResponse>(`/api/lessons/${lessonId}/complete`, {
       method: "POST"

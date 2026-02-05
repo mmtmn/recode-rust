@@ -66,6 +66,7 @@ export default function App() {
   const [showConfetti, setShowConfetti] = useState(false);
   const [bestToast, setBestToast] = useState<string | null>(null);
   const [isEditorFullscreen, setIsEditorFullscreen] = useState(false);
+  const [hasRestoredPrefs, setHasRestoredPrefs] = useState(false);
 
   useEffect(() => {
     let isActive = true;
@@ -80,9 +81,6 @@ export default function App() {
         setLanguages(languageData);
         setProgress(progressData);
         setAchievements(achievementData);
-        const firstSlug = languageData[0]?.slug ?? "";
-        setSelectedSlug(firstSlug);
-        setSelectedSlugs(firstSlug ? [firstSlug] : []);
       } finally {
         if (isActive) {
           setIsLoading(false);
@@ -113,6 +111,62 @@ export default function App() {
       isActive = false;
     };
   }, [languages]);
+
+  useEffect(() => {
+    if (languages.length === 0 || hasRestoredPrefs) return;
+    let isActive = true;
+    const available = new Set(languages.map((language) => language.slug));
+    const defaultSlug = languages[0]?.slug ?? "";
+
+    const applyPrefs = (prefs: {
+      playlist_mode: "all" | "multi";
+      selected_slugs: string[];
+      selected_slug: string | null;
+    }) => {
+      const nextMode = prefs.playlist_mode === "all" ? "all" : "multi";
+      const filteredSlugs = prefs.selected_slugs.filter((slug) => available.has(slug));
+      const nextSlugs = filteredSlugs.length > 0 ? filteredSlugs : defaultSlug ? [defaultSlug] : [];
+      const nextSelectedSlug =
+        (prefs.selected_slug && available.has(prefs.selected_slug) ? prefs.selected_slug : null) ??
+        nextSlugs[0] ??
+        defaultSlug;
+
+      setPlaylistMode(nextMode);
+      setSelectedSlugs(nextSlugs);
+      setSelectedSlug(nextSelectedSlug);
+      setHasRestoredPrefs(true);
+    };
+
+    api
+      .getLanguagePreferences()
+      .then((prefs) => {
+        if (!isActive) return;
+        applyPrefs(prefs);
+      })
+      .catch(() => {
+        if (!isActive) return;
+        applyPrefs({
+          playlist_mode: "multi",
+          selected_slugs: defaultSlug ? [defaultSlug] : [],
+          selected_slug: defaultSlug || null
+        });
+      });
+
+    return () => {
+      isActive = false;
+    };
+  }, [languages, hasRestoredPrefs]);
+
+  useEffect(() => {
+    if (!hasRestoredPrefs || languages.length === 0) return;
+    api
+      .setLanguagePreferences({
+        playlist_mode: playlistMode,
+        selected_slugs: selectedSlugs,
+        selected_slug: selectedSlug || null
+      })
+      .catch(() => {});
+  }, [hasRestoredPrefs, languages.length, playlistMode, selectedSlug, selectedSlugs]);
 
   const playlist = useMemo<PlaylistItem[]>(() => {
     const slugs = selectedSlugs;

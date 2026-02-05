@@ -26,6 +26,10 @@ vi.mock("./lib/api", () => {
           }
         ]),
       getProgress: () => Promise.resolve({ xp: 120, streak: 2, completed_lessons: 3 }),
+      getLanguagePreferences: () =>
+        Promise.resolve({ playlist_mode: "multi", selected_slugs: ["python"], selected_slug: "python" }),
+      setLanguagePreferences: () =>
+        Promise.resolve({ playlist_mode: "multi", selected_slugs: ["python"], selected_slug: "python" }),
       listAchievements: () =>
         Promise.resolve([
           { id: 1, key: "first_lesson", title: "First Steps", description: "", icon: "spark", points: 50 }

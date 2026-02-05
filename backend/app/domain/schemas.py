@@ -56,6 +56,18 @@ class ProgressRead(BaseModel):
     completed_lessons: int
 
 
+class LanguagePreferenceRead(BaseModel):
+    playlist_mode: str
+    selected_slugs: List[str]
+    selected_slug: Optional[str]
+
+
+class LanguagePreferenceWrite(BaseModel):
+    playlist_mode: str
+    selected_slugs: List[str]
+    selected_slug: Optional[str]
+
+
 class CompletionResponse(BaseModel):
     progress: ProgressRead
     new_achievements: List[AchievementRead]

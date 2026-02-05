@@ -4,7 +4,15 @@ from sqlmodel import Session, select
 from app.core.db import get_session
 from app.domain import schemas
 from app.domain.models import Achievement, Challenge, Lesson
-from app.repositories import achievement_repo, attempt_repo, challenge_repo, language_repo, lesson_repo, progress_repo
+from app.repositories import (
+    achievement_repo,
+    attempt_repo,
+    challenge_repo,
+    language_repo,
+    lesson_repo,
+    preferences_repo,
+    progress_repo,
+)
 from app.services.attempt_service import record_attempt
 from app.services.progress_service import complete_lesson
 from app.services.validation_service import validate_code
@@ -107,6 +115,88 @@ def get_progress(session: Session = Depends(get_session)):
         last_completed_at=user.last_completed_at,
         completed_lessons=completed_lessons,
     )
+
+
+def _build_language_preferences(session: Session, prefs) -> schemas.LanguagePreferenceRead:
+    languages = language_repo.list_languages(session)
+    slugs_ordered = [language.slug for language in languages]
+    available = set(slugs_ordered)
+
+    playlist_mode = prefs.playlist_mode if prefs.playlist_mode in {"all", "multi"} else "multi"
+    selected_slug = prefs.selected_slug if prefs.selected_slug in available else None
+
+    if playlist_mode == "all":
+        if not slugs_ordered:
+            return schemas.LanguagePreferenceRead(playlist_mode="all", selected_slugs=[], selected_slug=None)
+        if not selected_slug:
+            selected_slug = slugs_ordered[0]
+        ordered = [selected_slug] + [slug for slug in slugs_ordered if slug != selected_slug]
+        return schemas.LanguagePreferenceRead(
+            playlist_mode="all",
+            selected_slugs=ordered,
+            selected_slug=selected_slug,
+        )
+
+    stored_slugs = preferences_repo.load_selected_slugs(prefs)
+    filtered = [slug for slug in stored_slugs if slug in available]
+    if not filtered and slugs_ordered:
+        fallback = selected_slug or slugs_ordered[0]
+        filtered = [fallback]
+    if filtered and selected_slug not in filtered:
+        selected_slug = filtered[0]
+    return schemas.LanguagePreferenceRead(
+        playlist_mode="multi",
+        selected_slugs=filtered,
+        selected_slug=selected_slug,
+    )
+
+
+@router.get("/preferences/languages", response_model=schemas.LanguagePreferenceRead)
+def get_language_preferences(session: Session = Depends(get_session)):
+    user = progress_repo.get_or_create_user(session)
+    prefs = preferences_repo.get_or_create_preferences(session, user.id)
+    return _build_language_preferences(session, prefs)
+
+
+@router.put("/preferences/languages", response_model=schemas.LanguagePreferenceRead)
+def set_language_preferences(
+    payload: schemas.LanguagePreferenceWrite,
+    session: Session = Depends(get_session),
+):
+    if payload.playlist_mode not in {"all", "multi"}:
+        raise HTTPException(status_code=400, detail="Invalid playlist mode")
+    user = progress_repo.get_or_create_user(session)
+    languages = language_repo.list_languages(session)
+    slugs_ordered = [language.slug for language in languages]
+    available = set(slugs_ordered)
+
+    selected_slug = payload.selected_slug if payload.selected_slug in available else None
+    filtered_slugs = [slug for slug in payload.selected_slugs if slug in available]
+
+    if payload.playlist_mode == "all":
+        if not selected_slug:
+            if filtered_slugs:
+                selected_slug = filtered_slugs[0]
+            elif slugs_ordered:
+                selected_slug = slugs_ordered[0]
+        stored_slugs: list[str] = []
+    else:
+        if not filtered_slugs and selected_slug:
+            filtered_slugs = [selected_slug]
+        if not filtered_slugs and slugs_ordered:
+            filtered_slugs = [slugs_ordered[0]]
+        if filtered_slugs and selected_slug not in filtered_slugs:
+            selected_slug = filtered_slugs[0]
+        stored_slugs = filtered_slugs
+
+    prefs = preferences_repo.update_preferences(
+        session,
+        user.id,
+        payload.playlist_mode,
+        stored_slugs,
+        selected_slug,
+    )
+    return _build_language_preferences(session, prefs)
 
 
 @router.post("/lessons/{lesson_id}/complete", response_model=schemas.CompletionResponse)

@@ -66,6 +66,18 @@ class UserProfile(BaseModel, table=True):
 
     completions: List["LessonCompletion"] = Relationship(back_populates="user")
     achievements: List["UserAchievement"] = Relationship(back_populates="user")
+    preference: Optional["UserPreference"] = Relationship(back_populates="user")
+
+
+class UserPreference(BaseModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    user_id: int = Field(foreign_key="userprofile.id", index=True, sa_column_kwargs={"unique": True})
+    playlist_mode: str = "multi"
+    selected_slugs: str = "[]"
+    selected_slug: Optional[str] = None
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+
+    user: Optional[UserProfile] = Relationship(back_populates="preference")
 
 
 class LessonCompletion(BaseModel, table=True):
