@@ -11,12 +11,14 @@ Developer-first syntax drills with instant feedback, playlists, and a focused ed
 ## Stack
 - Backend: FastAPI + SQLModel + SQLite
 - Frontend: React + Vite + Tailwind + Framer Motion
+- Mobile: Flutter (Android + iOS)
 - Tests: Pytest (unit/integration), Vitest (frontend unit), Playwright (e2e)
 - Validation: Executes user code against expected outputs per language (no sandbox)
 
 ## Project Layout
 - `backend/`: API, domain, services, repositories, seed data
 - `frontend/`: React app
+- `mobile/`: Flutter app (Android + iOS)
 - `e2e/`: Playwright tests
 
 ## Prerequisites
@@ -61,6 +63,47 @@ To customize the API URL:
 VITE_API_URL=http://localhost:8000 npm run dev
 ```
 
+### Mobile (Flutter)
+```bash
+cd mobile
+flutter pub get
+```
+
+Start the backend in a separate terminal (see **Backend** above).
+
+If you need to (re)generate the platform folders:
+```bash
+cd mobile
+flutter create --platforms=android,ios .
+```
+
+#### Run on an Android emulator
+```bash
+flutter emulators
+flutter emulators --launch <emulator_id>
+flutter run --dart-define=API_URL=http://10.0.2.2:8000
+```
+
+#### Run on the iOS simulator
+```bash
+open -a Simulator
+flutter run --dart-define=API_URL=http://localhost:8000
+```
+
+#### Run on a real device (Android or iOS)
+1. Connect the device (USB) and ensure it appears in `flutter devices`.
+2. Use your machine's LAN IP for the API URL:
+```bash
+flutter run --dart-define=API_URL=http://<your-machine-ip>:8000
+```
+
+Notes:
+- Android emulators cannot reach `localhost` on your host; use `10.0.2.2` instead.
+- If you run into cleartext HTTP restrictions, enable HTTP for local dev:
+  - Android: set `android:usesCleartextTraffic="true"` in `android/app/src/main/AndroidManifest.xml`.
+  - iOS: set `NSAppTransportSecurity -> NSAllowsArbitraryLoads` to `YES` in `ios/Runner/Info.plist`.
+- iOS builds require macOS + Xcode.
+
 ## Quickstart (Two Terminals)
 Terminal 1:
 ```bash
@@ -98,6 +141,13 @@ Start backend + frontend in separate terminals, then:
 cd e2e
 npm install
 npm run test
+```
+
+### Mobile (Flutter)
+```bash
+cd mobile
+flutter test
+flutter test integration_test
 ```
 
 ## Notes
