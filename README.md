@@ -38,6 +38,60 @@ Developer-first syntax drills with instant feedback, playlists, and a focused ed
 
 ## Setup and Run Locally
 
+### Smart Install (Linux, macOS, Windows)
+
+Use the smart installer to verify prerequisites, auto-install or upgrade missing tooling, set up validation runtimes, sync project dependencies, and then choose what to run.
+
+macOS / Linux:
+```bash
+./scripts/smart-install.sh
+```
+
+Windows (PowerShell):
+```powershell
+./scripts/smart-install.ps1
+```
+
+Direct Python entrypoint (all platforms):
+```bash
+python scripts/smart_install.py
+```
+
+Helpful flags:
+- `--yes`: non-interactive mode (no prompts)
+- `--run <target>`: launch a command after setup (`backend`, `frontend`, `fullstack`, `backend-test`, `frontend-test`, `e2e-test`, `mobile-test`, `none`)
+- `--no-mobile`: skip Flutter/mobile setup
+- `--skip-playwright`: skip Playwright browser install step
+- `--skip-runtimes`: skip validation runtime checks/install attempts
+
+### Optional: Dev Aliases (`reback`, `refront`)
+
+Install terminal shortcuts that start backend/frontend from anywhere.
+
+macOS / Linux:
+```bash
+./scripts/setup-aliases.sh
+```
+
+To apply aliases in the current Bash session immediately:
+```bash
+source ./scripts/setup-aliases.sh
+```
+
+Windows (PowerShell):
+```powershell
+./scripts/setup-aliases.ps1
+```
+
+Direct Python entrypoint (all platforms):
+```bash
+python scripts/setup_aliases.py
+```
+
+After running, open a new terminal (or source your profile), then use:
+- `reback`: start backend (`uvicorn app.main:app --reload`)
+- `refront`: start frontend (`npm run dev`)
+
 ### Backend
 ```bash
 cd backend
