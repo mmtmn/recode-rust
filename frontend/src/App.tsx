@@ -3,12 +3,12 @@ import { useEffect, useMemo, useState } from "react";
 
 import AchievementBadge from "./components/AchievementBadge";
 import AchievementToast from "./components/AchievementToast";
+import AlgorithmsDataStructuresPanel from "./components/AlgorithmsDataStructuresPanel";
 import ConfettiBurst from "./components/ConfettiBurst";
 import EditorPanel from "./components/EditorPanel";
 import Sidebar from "./components/Sidebar";
 import StatsModal from "./components/StatsModal";
 import StatusBar from "./components/StatusBar";
-import TimerDisplay from "./components/TimerDisplay";
 import {
   api,
   Achievement,
@@ -66,6 +66,8 @@ export default function App() {
   const [showConfetti, setShowConfetti] = useState(false);
   const [bestToast, setBestToast] = useState<string | null>(null);
   const [isEditorFullscreen, setIsEditorFullscreen] = useState(false);
+  const [activeSection, setActiveSection] = useState<"syntax" | "algorithms">("syntax");
+  const [algoLanguageSlug, setAlgoLanguageSlug] = useState<string>("");
   const [hasRestoredPrefs, setHasRestoredPrefs] = useState(false);
 
   useEffect(() => {
@@ -267,6 +269,12 @@ export default function App() {
   }, [isEditorFullscreen]);
 
   useEffect(() => {
+    if (activeSection === "algorithms" && isEditorFullscreen) {
+      setIsEditorFullscreen(false);
+    }
+  }, [activeSection, isEditorFullscreen]);
+
+  useEffect(() => {
     if (!isEditorFullscreen) return;
     const handleKeydown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
@@ -305,6 +313,14 @@ export default function App() {
     api.listAttempts(slugs).then(setStatsAttempts);
     api.listBestScores(slugs).then(setStatsBest);
   }, [showStats, statsMode, selectedSlugs, languages]);
+
+  useEffect(() => {
+    if (languages.length === 0) return;
+    if (languages.some((lang) => lang.slug === algoLanguageSlug)) return;
+
+    const hasSelectedSlug = selectedSlug && languages.some((lang) => lang.slug === selectedSlug);
+    setAlgoLanguageSlug(hasSelectedSlug ? selectedSlug : languages[0].slug);
+  }, [languages, algoLanguageSlug, selectedSlug]);
 
   const topAchievements = useMemo(() => achievements.slice(0, 4), [achievements]);
   const activeChallenge = lessonDetail?.challenges[0] ?? null;
@@ -433,49 +449,102 @@ export default function App() {
         />
       </header>
 
-      <main className="mx-auto grid max-w-6xl gap-6 px-6 pb-12 pt-10 lg:grid-cols-[320px_1fr]">
-        <Sidebar
-          languages={languages}
-          playlist={playlist}
-          selectedItemId={selectedItem?.id ?? null}
-          onSelectItem={handleSelectItem}
-          isLoading={isLoading}
-          playlistMode={playlistMode}
-          onChangeMode={handleChangeMode}
-          selectedSlugs={selectedSlugs}
-          onToggleLanguage={handleToggleLanguage}
-        />
-
-        <div className="space-y-6">
-          {!isEditorFullscreen ? (
-            <motion.div variants={fadeIn} initial="hidden" animate="show">
-              <EditorPanel
-                challenge={activeChallenge}
-                lessonTitle={lessonDetail?.title}
-                lessonSummary={lessonDetail?.summary}
-                languageName={selectedItem?.languageName ?? null}
-                languageSlug={selectedItem?.languageSlug ?? null}
-                languageGlitchKey={languageGlitchKey}
-                languages={languages}
-                code={code}
-                onCodeChange={handleCodeChange}
-                onValidate={handleValidate}
-                onLanguageChange={handleLanguageChange}
-                validation={validation}
-                isValidating={isValidating || isCompleting}
-                successMessage={successMessage}
-                timerMs={elapsedMs}
-                timerEnabled={timerEnabled}
-                onToggleTimer={handleToggleTimer}
-                isFullscreen={false}
-                onToggleFullscreen={handleToggleFullscreen}
-              />
-            </motion.div>
-          ) : null}
+      <div className="mx-auto max-w-6xl px-6 pt-6">
+        <div className="inline-flex rounded-2xl border border-white/15 bg-white/5 p-1">
+          <button
+            className={`rounded-xl px-4 py-2 text-xs uppercase tracking-[0.2em] transition ${
+              activeSection === "syntax"
+                ? "bg-ember/20 text-white shadow-glow"
+                : "text-white/70 hover:bg-white/5 hover:text-white"
+            }`}
+            onClick={() => setActiveSection("syntax")}
+            type="button"
+          >
+            Syntax
+          </button>
+          <button
+            className={`rounded-xl px-4 py-2 text-xs uppercase tracking-[0.2em] transition ${
+              activeSection === "algorithms"
+                ? "bg-ember/20 text-white shadow-glow"
+                : "text-white/70 hover:bg-white/5 hover:text-white"
+            }`}
+            onClick={() => setActiveSection("algorithms")}
+            type="button"
+          >
+            Algorithms and data structures
+          </button>
         </div>
-      </main>
+      </div>
 
-      {isEditorFullscreen ? (
+      <AnimatePresence mode="wait" initial={false}>
+        {activeSection === "syntax" ? (
+          <motion.main
+            key="syntax"
+            className="mx-auto grid max-w-6xl gap-6 px-6 pb-12 pt-10 lg:grid-cols-[320px_1fr]"
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -12 }}
+            transition={{ duration: 0.32 }}
+          >
+            <Sidebar
+              languages={languages}
+              playlist={playlist}
+              selectedItemId={selectedItem?.id ?? null}
+              onSelectItem={handleSelectItem}
+              isLoading={isLoading}
+              playlistMode={playlistMode}
+              onChangeMode={handleChangeMode}
+              selectedSlugs={selectedSlugs}
+              onToggleLanguage={handleToggleLanguage}
+            />
+
+            <div className="space-y-6">
+              {!isEditorFullscreen ? (
+                <motion.div variants={fadeIn} initial="hidden" animate="show">
+                  <EditorPanel
+                    challenge={activeChallenge}
+                    lessonTitle={lessonDetail?.title}
+                    lessonSummary={lessonDetail?.summary}
+                    languageName={selectedItem?.languageName ?? null}
+                    languageSlug={selectedItem?.languageSlug ?? null}
+                    languageGlitchKey={languageGlitchKey}
+                    languages={languages}
+                    code={code}
+                    onCodeChange={handleCodeChange}
+                    onValidate={handleValidate}
+                    onLanguageChange={handleLanguageChange}
+                    validation={validation}
+                    isValidating={isValidating || isCompleting}
+                    successMessage={successMessage}
+                    timerMs={elapsedMs}
+                    timerEnabled={timerEnabled}
+                    onToggleTimer={handleToggleTimer}
+                    isFullscreen={false}
+                    onToggleFullscreen={handleToggleFullscreen}
+                  />
+                </motion.div>
+              ) : null}
+            </div>
+          </motion.main>
+        ) : (
+          <motion.main
+            key="algorithms"
+            className="mx-auto max-w-6xl px-6 pb-12 pt-10"
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -12 }}
+            transition={{ duration: 0.32 }}
+          >
+            <AlgorithmsDataStructuresPanel
+              languages={languages}
+              activeLanguageSlug={algoLanguageSlug}
+              onChangeLanguage={setAlgoLanguageSlug}
+            />
+          </motion.main>
+        )}
+      </AnimatePresence>
+
+      {activeSection === "syntax" && isEditorFullscreen ? (
         <EditorPanel
           challenge={activeChallenge}
           lessonTitle={lessonDetail?.title}
