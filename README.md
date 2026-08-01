@@ -1,214 +1,77 @@
-# Recode
+# recode-rust
 
+An open, practice-first route from Rust syntax to production Axum. Every lesson pairs a focused coding task with a Q&A checkpoint, so reading turns into recall and recall turns into working code.
 
-https://github.com/user-attachments/assets/3f7359e7-4775-4127-b681-fb522eefd26c
+The curriculum has two deliberate tracks:
 
+1. **Rust Foundations** — the full language path taught by the current Rust Book, reinforced with the concise syntax progression from W3Schools.
+2. **Axum Mastery** — Axum's documented surface area and the stack beneath it: Tokio, Hyper, Tower, `tower::Service`, tower-http, and Tonic.
 
+The app is itself built with Axum. It is stateless, stores learning progress only in the browser, and never executes submitted code. Rust snippets are parsed with `syn` and checked for the lesson's required concepts; that makes local practice safe while still catching syntax mistakes.
 
+## Quick start
 
-Developer-first syntax drills with instant feedback, playlists, and a focused editor experience. Built to emphasize clean architecture, SOLID, DRY, and test coverage across unit, integration, and E2E layers.
+You need the stable Rust toolchain (MSRV 1.88 because of the current Tonic release).
 
-## Stack
-- Backend: FastAPI + SQLModel + SQLite
-- Frontend: React + Vite + Tailwind + Framer Motion
-- Mobile: Flutter (Android + iOS)
-- Tests: Pytest (unit/integration), Vitest (frontend unit), Playwright (e2e)
-- Validation: Executes user code against expected outputs per language (no sandbox)
-
-## Project Layout
-- `backend/`: API, domain, services, repositories, seed data
-- `frontend/`: React app
-- `mobile/`: Flutter app (Android + iOS)
-- `e2e/`: Playwright tests
-
-## Prerequisites
-- Python 3.11+
-- Node.js 18+
-- npm 9+
-- Language runtimes for validation (install what you want to practice):
-  - Python (uses current interpreter)
-  - JavaScript (Node.js)
-  - TypeScript (`ts-node` or `tsc` + Node.js)
-  - Java (`javac` + `java`)
-  - C++ (`g++`)
-  - C# (`dotnet` SDK or `csc` + runtime)
-  - Go (`go`)
-  - Rust (`rustc`)
-  - SQL (`sqlite3` CLI)
-
-## Setup and Run Locally
-
-### Smart Install (Linux, macOS, Windows)
-
-Use the smart installer to verify prerequisites, auto-install or upgrade missing tooling, set up validation runtimes, sync project dependencies, and then choose what to run.
-
-macOS / Linux:
 ```bash
-./scripts/smart-install.sh
+git clone https://github.com/mmtmn/recode-rust.git
+cd recode-rust
+cargo run
 ```
 
-Windows (PowerShell):
-```powershell
-./scripts/smart-install.ps1
-```
+Open <http://127.0.0.1:3000>. Override the bind address with `RECODE_ADDR`:
 
-Direct Python entrypoint (all platforms):
 ```bash
-python scripts/smart_install.py
+RECODE_ADDR=0.0.0.0:8080 cargo run
 ```
 
-Helpful flags:
-- `--yes`: non-interactive mode (no prompts)
-- `--run <target>`: launch a command after setup (`backend`, `frontend`, `fullstack`, `backend-test`, `frontend-test`, `e2e-test`, `mobile-test`, `none`)
-- `--no-mobile`: skip Flutter/mobile setup
-- `--skip-playwright`: skip Playwright browser install step
-- `--skip-runtimes`: skip validation runtime checks/install attempts
+## What is covered
 
-### Optional: Dev Aliases (`reback`, `refront`)
+| Track | Coverage |
+| --- | --- |
+| Rust Foundations | Tooling and Cargo; syntax; scalar and compound types; ownership, borrowing and slices; structs and enums; modules; collections; errors; generics, traits and lifetimes; tests; closures and iterators; smart pointers; fearless concurrency; async Rust; patterns; unsafe Rust; macros; project architecture |
+| Axum | Routers and method routing; handlers; all core extractor families and extractor ordering; responses; rejections and error handling; state; middleware; WebSockets; SSE; multipart; graceful shutdown; testing; feature flags |
+| Tower | `Service`, readiness and backpressure; `Layer`; `ServiceBuilder`; `ServiceExt`; buffering, limits, load shedding, timeouts, retries, discovery, balancing and routing |
+| tower-http | Tracing, request IDs, sensitive headers, CORS, auth, CSRF, compression, body limits, timeouts, panic handling, file services, redirects, normalization, mapping, metrics and classification |
+| Tokio | Runtime models; tasks; cancellation; `select!`/`join!`; channels and synchronization; async I/O; networking; time; signals; blocking work and graceful shutdown |
+| Hyper | HTTP types and bodies; HTTP/1 and HTTP/2 connections; client/server APIs; upgrades; cancellation; runtime adapters and hyper-util |
+| Tonic | Protobuf/code generation; unary and streaming RPCs; metadata and status; interceptors; transport, TLS, compression and message limits; Tower/Axum interoperability |
 
-Install terminal shortcuts that start backend/frontend from anywhere.
+The exact documentation-to-lesson map is in [docs/COVERAGE.md](docs/COVERAGE.md). Source policy and version pins are in [docs/SOURCES.md](docs/SOURCES.md).
 
-macOS / Linux:
+## Development
+
 ```bash
-./scripts/setup-aliases.sh
+cargo fmt --check
+cargo clippy --all-targets --all-features -- -D warnings
+cargo test --all-features
 ```
 
-To apply aliases in the current Bash session immediately:
-```bash
-source ./scripts/setup-aliases.sh
+Useful endpoints:
+
+- `GET /api/health`
+- `GET /api/curriculum`
+- `GET /api/lessons/{id}`
+- `POST /api/lessons/{id}/code`
+- `POST /api/lessons/{id}/quiz`
+
+## Project layout
+
+```text
+src/
+  curriculum.rs   # Rust and Axum lesson catalog
+  domain.rs       # API-facing learning model
+  validation.rs   # safe syntax/concept and Q&A validation
+  lib.rs          # Axum router and handlers
+  main.rs         # Tokio runtime, tracing, and shutdown
+web/              # dependency-free learning interface
+docs/             # source policy and coverage audit
 ```
 
-Windows (PowerShell):
-```powershell
-./scripts/setup-aliases.ps1
-```
+## Contributing
 
-Direct Python entrypoint (all platforms):
-```bash
-python scripts/setup_aliases.py
-```
+Curriculum fixes, clearer explanations, better exercises, and missing edge cases are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md). Content is original and links learners to upstream documentation; please do not copy documentation pages verbatim.
 
-After running, open a new terminal (or source your profile), then use:
-- `reback`: start backend (`uvicorn app.main:app --reload`)
-- `refront`: start frontend (`npm run dev`)
+## License
 
-### Backend
-```bash
-cd backend
-python -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-uvicorn app.main:app --reload
-```
-
-The API will run on `http://localhost:8000`. A local SQLite database is created at `backend/app.db` and seeded on startup.
-
-### Frontend
-```bash
-cd frontend
-npm install
-npm run dev
-```
-
-The UI will run on `http://localhost:5173` and will call the backend at `http://localhost:8000` by default.
-
-To customize the API URL:
-```bash
-VITE_API_URL=http://localhost:8000 npm run dev
-```
-
-### Mobile (Flutter)
-```bash
-cd mobile
-flutter pub get
-```
-
-Start the backend in a separate terminal (see **Backend** above).
-
-If you need to (re)generate the platform folders:
-```bash
-cd mobile
-flutter create --platforms=android,ios .
-```
-
-#### Run on an Android emulator
-```bash
-flutter emulators
-flutter emulators --launch <emulator_id>
-flutter run --dart-define=API_URL=http://10.0.2.2:8000
-```
-
-#### Run on the iOS simulator
-```bash
-open -a Simulator
-flutter run --dart-define=API_URL=http://localhost:8000
-```
-
-#### Run on a real device (Android or iOS)
-1. Connect the device (USB) and ensure it appears in `flutter devices`.
-2. Use your machine's LAN IP for the API URL:
-```bash
-flutter run --dart-define=API_URL=http://<your-machine-ip>:8000
-```
-
-Notes:
-- Android emulators cannot reach `localhost` on your host; use `10.0.2.2` instead.
-- If you run into cleartext HTTP restrictions, enable HTTP for local dev:
-  - Android: set `android:usesCleartextTraffic="true"` in `android/app/src/main/AndroidManifest.xml`.
-  - iOS: set `NSAppTransportSecurity -> NSAllowsArbitraryLoads` to `YES` in `ios/Runner/Info.plist`.
-- iOS builds require macOS + Xcode.
-
-## Quickstart (Two Terminals)
-Terminal 1:
-```bash
-cd backend
-python -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-uvicorn app.main:app --reload
-```
-
-Terminal 2:
-```bash
-cd frontend
-npm install
-npm run dev
-```
-
-## Tests
-
-### Backend unit + integration
-```bash
-cd backend
-pytest
-```
-
-### Frontend unit
-```bash
-cd frontend
-npm run test
-```
-
-### End-to-end
-Start backend + frontend in separate terminals, then:
-```bash
-cd e2e
-npm install
-npm run test
-```
-
-### Mobile (Flutter)
-```bash
-cd mobile
-flutter test
-flutter test integration_test
-```
-
-## Notes
-- Data is seeded automatically on backend startup.
-- Validation runs code using local runtimes and compares output to lesson expectations.
-- To refresh lesson content after seed changes, delete `backend/app.db` and restart the backend.
-- To reset timing stats (attempts + best scores):
-  ```bash
-  sqlite3 backend/app.db "DELETE FROM attempt; DELETE FROM bestscore;"
-  ```
+MIT. See [LICENSE](LICENSE).

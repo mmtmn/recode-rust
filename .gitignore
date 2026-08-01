@@ -1,18 +1,16 @@
-# Python
-__pycache__/
-*.pyc
-.venv/
-venv/
+# Rust build output
+/target/
 
-# Node
-node_modules/
-dist/
+# Local editor and operating-system files
+.DS_Store
+.idea/
+.vscode/
+*.swp
 
-# Database
-*.db
+# Local environment overrides
+.env
 
-# Logs
+# Logs and browser test artifacts
 *.log
-
-# Playwright
 playwright-report/
+test-results/

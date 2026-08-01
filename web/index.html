@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Practice Rust from first syntax through production Axum, Tower, Tokio, Hyper, and Tonic."
+    />
+    <meta name="theme-color" content="#11100e" />
+    <title>recode-rust — Rust to Axum</title>
+    <link rel="stylesheet" href="/styles.css" />
+    <script src="/app.js" defer></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#lesson">Skip to lesson</a>
+
+    <div class="app-shell">
+      <aside class="sidebar" id="sidebar" aria-label="Course navigation">
+        <div class="brand-row">
+          <a class="brand" href="#rust-toolchain" aria-label="recode-rust home">
+            <span class="brand-mark" aria-hidden="true">R</span>
+            <span>
+              <strong>recode<span>-rust</span></strong>
+              <small>own the stack</small>
+            </span>
+          </a>
+          <button class="icon-button close-nav" id="close-nav" type="button" aria-label="Close navigation">×</button>
+        </div>
+
+        <section class="progress-card" aria-labelledby="progress-title">
+          <div class="progress-heading">
+            <div>
+              <span class="eyebrow" id="progress-title">Your run</span>
+              <strong id="progress-percent">0%</strong>
+            </div>
+            <span class="xp-pill"><span id="earned-xp">0</span> XP</span>
+          </div>
+          <div class="progress-track" aria-hidden="true"><span id="progress-bar"></span></div>
+          <p><span id="completed-count">0</span> of <span id="activity-count">0</span> activities complete</p>
+        </section>
+
+        <div class="search-wrap">
+          <label class="sr-only" for="lesson-search">Search lessons</label>
+          <svg aria-hidden="true" viewBox="0 0 24 24"><path d="m21 21-4.35-4.35m2.35-5.65a8 8 0 1 1-16 0 8 8 0 0 1 16 0Z" /></svg>
+          <input id="lesson-search" type="search" placeholder="Search ownership, middleware…" autocomplete="off" />
+          <kbd>/</kbd>
+        </div>
+
+        <div class="track-switch" role="group" aria-label="Filter curriculum by track">
+          <button class="track-button active" type="button" data-track="all">All</button>
+          <button class="track-button" type="button" data-track="rust-foundations">Rust</button>
+          <button class="track-button" type="button" data-track="axum-mastery">Axum</button>
+        </div>
+
+        <nav class="lesson-nav" id="lesson-nav" aria-label="Lessons">
+          <div class="nav-loading"><span></span><span></span><span></span></div>
+        </nav>
+
+        <footer class="side-footer">
+          <a href="https://github.com/mmtmn/recode-rust" target="_blank" rel="noreferrer">GitHub</a>
+          <a href="/api/health" target="_blank">API</a>
+          <span>MIT</span>
+        </footer>
+      </aside>
+
+      <div class="nav-scrim" id="nav-scrim" hidden></div>
+
+      <main class="main-panel">
+        <header class="topbar">
+          <button class="icon-button menu-button" id="open-nav" type="button" aria-label="Open course navigation">
+            <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16" /></svg>
+          </button>
+          <div class="crumbs" aria-label="Current location">
+            <span id="track-crumb">Curriculum</span>
+            <span aria-hidden="true">/</span>
+            <strong id="unit-crumb">Loading</strong>
+          </div>
+          <div class="top-actions">
+            <span class="safe-badge" title="Submissions are parsed, never executed">
+              <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 3 5 6v5c0 4.6 2.8 8.8 7 10 4.2-1.2 7-5.4 7-10V6l-7-3Z" /><path d="m9 12 2 2 4-4" /></svg>
+              safe parser
+            </span>
+            <a class="github-link" href="https://github.com/mmtmn/recode-rust" target="_blank" rel="noreferrer">View source ↗</a>
+          </div>
+        </header>
+
+        <div class="content-wrap">
+          <section class="stack-map" aria-labelledby="stack-title">
+            <div class="stack-copy">
+              <span class="eyebrow">The service stack</span>
+              <h2 id="stack-title">One request, six layers of understanding.</h2>
+              <p>Follow the call from ergonomic handler to runtime—and back as a response.</p>
+            </div>
+            <div class="stack-flow" aria-label="Axum ecosystem dependency flow">
+              <span data-tone="axum">Axum<small>ergonomics</small></span><i>→</i>
+              <span data-tone="tower">Tower<small>service</small></span><i>→</i>
+              <span data-tone="http">tower-http<small>policy</small></span><i>→</i>
+              <span data-tone="hyper">Hyper<small>protocol</small></span><i>→</i>
+              <span data-tone="tokio">Tokio<small>runtime</small></span>
+              <b>Tonic reuses Tokio + Hyper + Tower for gRPC</b>
+            </div>
+          </section>
+
+          <article class="lesson" id="lesson" tabindex="-1" aria-live="polite">
+            <div class="lesson-loading" id="lesson-loading">
+              <span></span><span></span><span></span><span></span>
+            </div>
+
+            <div id="lesson-content" hidden>
+              <header class="lesson-header">
+                <div class="lesson-kicker">
+                  <span class="track-tag" id="lesson-track">Rust Foundations</span>
+                  <span class="difficulty-tag" id="lesson-difficulty">Beginner</span>
+                  <span id="lesson-time">12 min</span>
+                  <span id="lesson-xp">80 XP available</span>
+                </div>
+                <h1 id="lesson-title"></h1>
+                <p class="lesson-summary" id="lesson-summary"></p>
+              </header>
+
+              <section class="concept-card" aria-labelledby="concept-title">
+                <div class="section-heading">
+                  <span class="section-number">01</span>
+                  <div>
+                    <span class="eyebrow">Build the model</span>
+                    <h2 id="concept-title">What to know</h2>
+                  </div>
+                </div>
+                <div class="notes-grid" id="lesson-notes"></div>
+                <div class="source-row">
+                  <span>Read upstream</span>
+                  <div id="lesson-sources"></div>
+                </div>
+              </section>
+
+              <section class="practice-card" aria-labelledby="practice-title">
+                <div class="section-heading practice-heading">
+                  <span class="section-number">02</span>
+                  <div>
+                    <span class="eyebrow">Make it stick</span>
+                    <h2 id="practice-title">Practice</h2>
+                  </div>
+                  <div class="activity-tabs" role="tablist" aria-label="Lesson activities">
+                    <button id="code-tab" class="activity-tab active" type="button" role="tab" aria-selected="true" aria-controls="code-panel" data-activity="code">
+                      <span class="tab-state" id="code-state">{ }</span> Code task
+                    </button>
+                    <button id="quiz-tab" class="activity-tab" type="button" role="tab" aria-selected="false" aria-controls="quiz-panel" data-activity="quiz">
+                      <span class="tab-state" id="quiz-state">?</span> Q&amp;A
+                    </button>
+                  </div>
+                </div>
+
+                <div class="activity-panel" id="code-panel" role="tabpanel" aria-labelledby="code-tab">
+                  <div class="task-intro">
+                    <div><span class="task-type">Coding task</span><h3 id="code-prompt"></h3></div>
+                    <button class="text-button" id="reset-code" type="button">Reset starter</button>
+                  </div>
+                  <div class="editor-shell">
+                    <div class="editor-bar">
+                      <span><i></i><i></i><i></i></span>
+                      <strong>main.rs</strong>
+                      <span>Rust 2024</span>
+                    </div>
+                    <label class="sr-only" for="code-editor">Rust solution</label>
+                    <textarea id="code-editor" spellcheck="false" autocomplete="off" autocapitalize="off"></textarea>
+                  </div>
+                  <div class="hint-row"><strong>Hint</strong><span id="code-hint"></span></div>
+                  <div class="action-row">
+                    <button class="primary-button" id="check-code" type="button">Check code <kbd>⌘↵</kbd></button>
+                    <span>Syntax + lesson concepts. Never executed.</span>
+                  </div>
+                  <div class="feedback" id="code-feedback" hidden></div>
+                </div>
+
+                <div class="activity-panel" id="quiz-panel" role="tabpanel" aria-labelledby="quiz-tab" hidden>
+                  <div class="task-intro">
+                    <div><span class="task-type">Knowledge check</span><h3 id="quiz-question"></h3></div>
+                  </div>
+                  <div class="quiz-choices" id="quiz-choices"></div>
+                  <div class="action-row">
+                    <button class="primary-button" id="check-quiz" type="button" disabled>Check answer</button>
+                    <span>Choose the best answer, then commit.</span>
+                  </div>
+                  <div class="feedback" id="quiz-feedback" hidden></div>
+                </div>
+              </section>
+
+              <footer class="lesson-footer">
+                <button class="secondary-button" id="previous-lesson" type="button">← Previous</button>
+                <div><span id="lesson-position"></span><small>Stay curious. Read the types.</small></div>
+                <button class="primary-button" id="next-lesson" type="button">Next lesson →</button>
+              </footer>
+            </div>
+          </article>
+
+          <section class="load-error" id="load-error" hidden>
+            <strong>Could not load the curriculum.</strong>
+            <p>Make sure the Axum server is running, then try again.</p>
+            <button class="primary-button" type="button" onclick="window.location.reload()">Reload</button>
+          </section>
+        </div>
+      </main>
+    </div>
+
+    <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+  </body>
+</html>
