@@ -23,10 +23,14 @@ Thank you for helping make the route into Rust and Axum clearer.
 ```bash
 cargo fmt
 cargo clippy --all-targets --all-features -- -D warnings
-cargo test --all-features
+cargo test --all-targets --all-features --locked
+npm ci
+npm run check:js
+npx playwright install chromium
+npm run test:e2e
 ```
 
-Then run `cargo run`, open <http://127.0.0.1:3000>, and check the lesson on a narrow and wide viewport.
+The Playwright command starts its own Axum server and exercises desktop and mobile flows. For exploratory checks, run `cargo run` and open <http://127.0.0.1:3000>.
 
 ## Adding a lesson
 

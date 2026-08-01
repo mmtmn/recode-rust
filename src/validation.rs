@@ -91,6 +91,20 @@ mod tests {
         let lesson = lesson_by_id("rust-hello").expect("fixture lesson");
         let result = validate_code(lesson, lesson.code.solution);
         assert!(result.correct);
+        assert!(result.solution.is_none());
+        assert!(result.explanation.is_none());
+        assert_eq!(result.details.len(), 1);
+    }
+
+    #[test]
+    fn ignores_whitespace_when_matching_required_concepts() {
+        let lesson = lesson_by_id("rust-hello").expect("fixture lesson");
+        let result = validate_code(
+            lesson,
+            "fn\nmain () {\n    // greeting\n    println! ( \"Hello, Rust!\" );\n}\n",
+        );
+
+        assert!(result.correct);
     }
 
     #[test]
@@ -99,12 +113,52 @@ mod tests {
         let result = validate_code(lesson, "fn main( {");
         assert!(!result.correct);
         assert!(result.message.contains("syntax"));
+        assert!(!result.details.is_empty());
+        assert_eq!(result.solution, Some(lesson.code.solution));
+    }
+
+    #[test]
+    fn rejects_an_empty_submission_with_the_reference_solution() {
+        let lesson = lesson_by_id("rust-hello").expect("fixture lesson");
+        let result = validate_code(lesson, "  \n\t");
+
+        assert!(!result.correct);
+        assert!(result.message.contains("Write a Rust solution"));
+        assert!(result.details.is_empty());
+        assert_eq!(result.solution, Some(lesson.code.solution));
+    }
+
+    #[test]
+    fn reports_every_missing_target_concept() {
+        let lesson = lesson_by_id("rust-hello").expect("fixture lesson");
+        let result = validate_code(lesson, "fn main() {}\n");
+
+        assert!(!result.correct);
+        assert_eq!(result.details.len(), 3);
+        assert!(
+            result
+                .details
+                .iter()
+                .any(|detail| detail.contains("println!"))
+        );
+        assert!(
+            result
+                .details
+                .iter()
+                .any(|detail| detail.contains("Hello, Rust!"))
+        );
     }
 
     #[test]
     fn grades_quizzes_by_choice_index() {
         let lesson = lesson_by_id("rust-hello").expect("fixture lesson");
-        assert!(validate_quiz(lesson, lesson.quiz.answer).correct);
-        assert!(!validate_quiz(lesson, (lesson.quiz.answer + 1) % 3).correct);
+        let correct = validate_quiz(lesson, lesson.quiz.answer);
+        let incorrect = validate_quiz(lesson, (lesson.quiz.answer + 1) % 3);
+
+        assert!(correct.correct);
+        assert!(!incorrect.correct);
+        assert_eq!(correct.explanation, Some(lesson.quiz.explanation));
+        assert_eq!(incorrect.explanation, Some(lesson.quiz.explanation));
+        assert!(correct.solution.is_none());
     }
 }

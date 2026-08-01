@@ -171,3 +171,42 @@ pub struct HealthResponse {
     pub service: &'static str,
     pub lessons: usize,
 }
+
+#[cfg(test)]
+mod tests {
+    use serde_json::to_value;
+
+    use super::{PublicLesson, Track};
+    use crate::curriculum::lesson_by_id;
+
+    #[test]
+    fn track_labels_are_human_readable() {
+        assert_eq!(Track::RustFoundations.label(), "Rust Foundations");
+        assert_eq!(Track::AxumMastery.label(), "Axum Mastery");
+    }
+
+    #[test]
+    fn track_serialization_uses_stable_kebab_case_keys() {
+        assert_eq!(
+            to_value(Track::RustFoundations).expect("serialize track"),
+            "rust-foundations"
+        );
+        assert_eq!(
+            to_value(Track::AxumMastery).expect("serialize track"),
+            "axum-mastery"
+        );
+    }
+
+    #[test]
+    fn public_lesson_omits_grading_secrets() {
+        let lesson = lesson_by_id("rust-toolchain").expect("fixture lesson");
+        let value = to_value(PublicLesson::from(lesson)).expect("serialize public lesson");
+
+        assert_eq!(value["id"], lesson.id);
+        assert_eq!(value["track_label"], lesson.track.label());
+        assert!(value["code"].get("solution").is_none());
+        assert!(value["code"].get("required").is_none());
+        assert!(value["quiz"].get("answer").is_none());
+        assert!(value["quiz"].get("explanation").is_none());
+    }
+}

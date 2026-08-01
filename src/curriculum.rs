@@ -3261,8 +3261,9 @@ pub fn lesson_by_id(id: &str) -> Option<&'static Lesson> {
 mod tests {
     use std::collections::HashSet;
 
-    use super::CURRICULUM;
+    use super::{CURRICULUM, lesson_by_id};
     use crate::domain::Track;
+    use crate::validation::validate_code;
 
     #[test]
     fn curriculum_is_large_unique_and_balanced() {
@@ -3299,6 +3300,72 @@ mod tests {
             syn::parse_file(lesson.code.solution).unwrap_or_else(|error| {
                 panic!("{} has invalid solution syntax: {error}", lesson.id)
             });
+        }
+    }
+
+    #[test]
+    fn lesson_ids_and_content_are_stable_and_non_empty() {
+        for lesson in CURRICULUM {
+            assert_eq!(lesson_by_id(lesson.id).map(|item| item.id), Some(lesson.id));
+            assert!(
+                lesson.id.chars().all(|character| {
+                    character.is_ascii_lowercase() || character.is_ascii_digit() || character == '-'
+                }),
+                "{} is not a kebab-case lesson id",
+                lesson.id
+            );
+            assert!(!lesson.id.starts_with('-') && !lesson.id.ends_with('-'));
+            assert!(!lesson.id.contains("--"));
+            assert!(!lesson.unit.trim().is_empty());
+            assert!(!lesson.title.trim().is_empty());
+            assert!(!lesson.summary.trim().is_empty());
+            assert!(!lesson.notes.is_empty());
+            assert!(lesson.notes.iter().all(|note| !note.trim().is_empty()));
+            assert!(lesson.minutes > 0);
+            assert!(lesson.xp > 0);
+        }
+
+        assert!(lesson_by_id("does-not-exist").is_none());
+    }
+
+    #[test]
+    fn every_activity_has_a_sound_contract() {
+        for lesson in CURRICULUM {
+            assert!(!lesson.code.prompt.trim().is_empty(), "{}", lesson.id);
+            assert!(!lesson.code.starter.trim().is_empty(), "{}", lesson.id);
+            assert!(!lesson.code.hint.trim().is_empty(), "{}", lesson.id);
+            assert!(!lesson.code.required.is_empty(), "{}", lesson.id);
+            assert!(
+                lesson
+                    .code
+                    .required
+                    .iter()
+                    .all(|token| !token.trim().is_empty()),
+                "{}",
+                lesson.id
+            );
+
+            let choices: HashSet<_> = lesson.quiz.choices.iter().collect();
+            assert_eq!(choices.len(), lesson.quiz.choices.len(), "{}", lesson.id);
+            assert!(!lesson.quiz.question.trim().is_empty(), "{}", lesson.id);
+            assert!(!lesson.quiz.explanation.trim().is_empty(), "{}", lesson.id);
+            assert!(
+                lesson
+                    .quiz
+                    .choices
+                    .iter()
+                    .all(|choice| !choice.trim().is_empty()),
+                "{}",
+                lesson.id
+            );
+        }
+    }
+
+    #[test]
+    fn every_reference_solution_passes_its_own_validator() {
+        for lesson in CURRICULUM {
+            let result = validate_code(lesson, lesson.code.solution);
+            assert!(result.correct, "{}: {:?}", lesson.id, result.details);
         }
     }
 }

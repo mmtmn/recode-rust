@@ -25,6 +25,12 @@ Open <http://127.0.0.1:3000>. Override the bind address with `RECODE_ADDR`:
 RECODE_ADDR=0.0.0.0:8080 cargo run
 ```
 
+Or run the continuously delivered container:
+
+```bash
+docker run --rm -p 3000:3000 ghcr.io/mmtmn/recode-rust:latest
+```
+
 ## What is covered
 
 | Track | Coverage |
@@ -44,8 +50,26 @@ The exact documentation-to-lesson map is in [docs/COVERAGE.md](docs/COVERAGE.md)
 ```bash
 cargo fmt --check
 cargo clippy --all-targets --all-features -- -D warnings
-cargo test --all-features
+cargo test --all-targets --all-features --locked
+npm ci
+npm run check:js
+npx playwright install chromium
+npm run test:e2e
 ```
+
+The automated test pyramid covers:
+
+- **Unit tests** for curriculum invariants, public-domain serialization, safe code validation, and quiz grading.
+- **Integration tests** for every API family, rejection paths, response contracts, request IDs, answer secrecy, and static/SPA delivery.
+- **End-to-end tests** in real Chromium for loading, search/filter/deep links, code and quiz completion, feedback recovery, persisted progress, and the mobile navigation drawer.
+
+Playwright starts an isolated Axum server on `127.0.0.1:3100`; a separately running development server is not required.
+
+## CI/CD
+
+GitHub Actions runs formatting, strict Clippy, all Rust tests, documentation checks, and Chromium E2E tests on every pull request and `main` push. Pull requests also prove that the production container builds. A successful `main` pipeline publishes immutable commit tags and `latest` to `ghcr.io/mmtmn/recode-rust` with provenance and an SBOM.
+
+Dependabot groups weekly Rust, Playwright, GitHub Actions, and base-image updates so each update is validated by the same pipeline.
 
 Useful endpoints:
 
@@ -65,7 +89,10 @@ src/
   lib.rs          # Axum router and handlers
   main.rs         # Tokio runtime, tracing, and shutdown
 web/              # dependency-free learning interface
+tests/            # black-box Axum API integration tests
+e2e/              # Playwright browser journeys
 docs/             # source policy and coverage audit
+.github/           # CI/CD and dependency automation
 ```
 
 ## Contributing
